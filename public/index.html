@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EuAiTalk - Audio Konversation mit KI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎙️ EuAiTalk</h1>
+            <p class="subtitle">Unterhalte dich per Sprache mit der KI</p>
+        </header>
+
+        <!-- Persona Selection -->
+        <div class="persona-selector">
+            <label for="persona">Wähle eine Persona:</label>
+            <select id="persona">
+                <option value="general">Allgemeiner Assistent</option>
+                <option value="storyteller">Geschichtenerzähler</option>
+                <option value="comedian">Comedian</option>
+                <option value="bible">Bibel-Geschichten</option>
+            </select>
+        </div>
+
+        <!-- Chat Display -->
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-message">
+                <p>👋 Willkommen bei EuAiTalk!</p>
+                <p>Drücke den Mikrofon-Button und sprich mit der KI.</p>
+            </div>
+        </div>
+
+        <!-- Status Display -->
+        <div class="status" id="status">Bereit</div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="recordButton" class="record-button" title="Klicken und sprechen">
+                <span class="mic-icon">🎤</span>
+            </button>
+            <button id="clearButton" class="clear-button" title="Verlauf löschen">
+                🗑️
+            </button>
+        </div>
+
+        <!-- API Status -->
+        <div class="api-status" id="apiStatus">
+            <small>API-Status wird geladen...</small>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

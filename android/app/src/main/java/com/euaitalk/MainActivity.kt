@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.webkit.*
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -38,6 +39,9 @@ class MainActivity : AppCompatActivity() {
         
         // Configure WebView
         setupWebView()
+        
+        // Setup back button handling
+        setupBackNavigation()
         
         // Load the app
         loadApp()
@@ -209,14 +213,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Handle back button to navigate within WebView
+     * Setup back button navigation for WebView
+     * Uses modern OnBackPressedDispatcher API for Android 13+ compatibility
      */
-    override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+    private fun setupBackNavigation() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    // Let the system handle the back press (exit app)
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
     }
 
     /**

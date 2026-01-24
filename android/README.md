@@ -104,10 +104,14 @@ Dann kannst du in Chrome DevTools debuggen:
 
 ## 🎨 App-Icon anpassen
 
+**Hinweis:** Die App verwendet aktuell das Standard-Android-Icon. Für ein professionelles App-Icon:
+
 Icon-Dateien befinden sich in:
 - `app/src/main/res/mipmap-*/ic_launcher.png`
 
 Nutze [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/) zum Generieren.
+
+Siehe auch: [app/src/main/res/ICONS.md](app/src/main/res/ICONS.md) für Details.
 
 ## 📦 Release Build
 

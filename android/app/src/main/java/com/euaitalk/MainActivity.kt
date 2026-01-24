@@ -24,9 +24,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private val PERMISSION_REQUEST_CODE = 100
     
-    // Server URL - Change this to your production server URL when deploying
-    // For local development with computer: use your computer's IP (e.g., "http://192.168.1.100:3000")
-    private val SERVER_URL = "http://10.0.2.2:3000"  // Android emulator localhost
+    // Server URL from BuildConfig - configured per build variant
+    // Debug: http://10.0.2.2:3000 (emulator localhost)
+    // Release: Set in app/build.gradle
+    private val SERVER_URL = BuildConfig.SERVER_URL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,9 +101,11 @@ class MainActivity : AppCompatActivity() {
             // Better rendering
             useWideViewPort = true
             loadWithOverviewMode = true
-            
-            // For debugging (disable in production)
-            // WebView.setWebContentsDebuggingEnabled(true)
+        }
+        
+        // Enable debugging in debug builds only
+        if (BuildConfig.DEBUG) {
+            WebView.setWebContentsDebuggingEnabled(true)
         }
         
         // Set WebViewClient to handle navigation

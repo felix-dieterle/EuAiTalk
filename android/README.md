@@ -39,18 +39,36 @@ Wir haben uns für einen **WebView Wrapper Ansatz** entschieden statt eines sepa
 
 ### Server-URL konfigurieren
 
-Bearbeite `MainActivity.kt` und setze die richtige Server-URL:
+Die Server-URL wird automatisch per Build-Variante konfiguriert:
 
-```kotlin
-// Für Entwicklung mit lokalem Server:
-private val SERVER_URL = "http://10.0.2.2:3000"  // Android Emulator
+- **Debug Build**: `http://10.0.2.2:3000` (Android Emulator localhost)
+- **Release Build**: `https://your-production-server.com` (muss konfiguriert werden)
 
-// Für echtes Gerät im selben Netzwerk:
-private val SERVER_URL = "http://192.168.1.100:3000"  // Deine Computer-IP
+**Für Entwicklung mit echtem Gerät** im selben Netzwerk:
 
-// Für Produktion:
-private val SERVER_URL = "https://your-server.com"
+Bearbeite `app/build.gradle` und füge eine neue Build-Variante hinzu:
+
+```gradle
+buildTypes {
+    debug {
+        buildConfigField "String", "SERVER_URL", "\"http://192.168.1.100:3000\""
+    }
+}
 ```
+
+**Für Produktion:**
+
+Bearbeite `app/build.gradle` im `release` Block:
+
+```gradle
+buildTypes {
+    release {
+        buildConfigField "String", "SERVER_URL", "\"https://your-production-server.com\""
+    }
+}
+```
+
+Die Server-URL aus `BuildConfig.SERVER_URL` wird automatisch verwendet.
 
 ### App bauen und ausführen
 
@@ -87,17 +105,30 @@ Die App benötigt folgende Berechtigungen:
 
 Diese werden beim ersten Start angefordert.
 
-## 🔍 Debugging
+## 🔒 Netzwerk-Sicherheit
 
-### WebView Debugging aktivieren:
+Die App nutzt eine Network Security Config für sichere Kommunikation:
 
-In `MainActivity.kt`, diese Zeile auskommentieren:
+- **Produktion**: Nur HTTPS erlaubt
+- **Entwicklung**: Localhost (10.0.2.2, 127.0.0.1) per HTTP erlaubt
 
-```kotlin
-WebView.setWebContentsDebuggingEnabled(true)
+Konfiguration in: `app/src/main/res/xml/network_security_config.xml`
+
+**Für echtes Gerät** im lokalen Netzwerk, füge deine IP hinzu:
+
+```xml
+<domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="true">192.168.1.100</domain>
+</domain-config>
 ```
 
-Dann kannst du in Chrome DevTools debuggen:
+## 🔍 Debugging
+
+### WebView Debugging:
+
+WebView Debugging ist **automatisch aktiviert** in Debug-Builds.
+
+Zugriff über Chrome DevTools:
 1. Chrome öffnen: `chrome://inspect`
 2. Dein Gerät/Emulator sollte erscheinen
 3. "Inspect" klicken

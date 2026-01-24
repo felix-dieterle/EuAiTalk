@@ -13,13 +13,29 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        
+        // Server URL configuration for different build variants
+        buildConfigField "String", "SERVER_URL", "\"http://10.0.2.2:3000\""
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // Production server URL - CHANGE THIS for your production deployment
+            buildConfigField "String", "SERVER_URL", "\"https://your-production-server.com\""
         }
+        debug {
+            minifyEnabled false
+            
+            // Development server URL - emulator localhost
+            buildConfigField "String", "SERVER_URL", "\"http://10.0.2.2:3000\""
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {

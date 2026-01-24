@@ -3,8 +3,9 @@
     <!-- Production configuration: Only HTTPS allowed -->
     <base-config cleartextTrafficPermitted="false" />
     
-    <!-- Development configuration: Allow localhost for debugging -->
-    <!-- Remove or comment out for production release -->
+    <!-- ⚠️ Development configuration: Allow localhost for debugging -->
+    <!-- TODO: Remove or use build-specific configs for production -->
+    <!-- See android/PRODUCTION.md for production setup -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android emulator -->
         <domain includeSubdomains="true">localhost</domain>

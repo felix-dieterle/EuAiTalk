@@ -2,6 +2,10 @@
 
 Dieser Ordner enthält die Android-App für EuAiTalk.
 
+> **📖 Schnellstart:** Siehe [QUICKSTART.md](QUICKSTART.md)  
+> **🚀 Produktion:** Siehe [PRODUCTION.md](PRODUCTION.md)  
+> **🏗️ Architektur:** Siehe [ARCHITECTURE.md](ARCHITECTURE.md)
+
 ## 📱 Architektur-Entscheidung: WebView Wrapper
 
 Wir haben uns für einen **WebView Wrapper Ansatz** entschieden statt eines separaten nativen Android-Projekts.

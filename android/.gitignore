@@ -28,6 +28,8 @@ output.json
 *.jks
 *.keystore
 keystore.properties
+euaitalk-release.keystore
+release.keystore
 
 # APK/Bundle files (optional - uncomment if you don't want to track builds)
 *.apk

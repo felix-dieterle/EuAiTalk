@@ -171,7 +171,8 @@ async function transcribeAudio(base64Audio) {
         });
         
         if (!response.ok) {
-            throw new Error('Transcription failed');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Transcription failed (${response.status}): ${errorData.error || response.statusText}`);
         }
         
         const data = await response.json();
@@ -204,7 +205,8 @@ async function getChatResponse(userMessage) {
         });
         
         if (!response.ok) {
-            throw new Error('Chat failed');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Chat failed (${response.status}): ${errorData.error || response.statusText}`);
         }
         
         const data = await response.json();

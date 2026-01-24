@@ -19,6 +19,13 @@ app.use(express.json());
 app.use(express.static('public'));
 
 /**
+ * Helper function to check if API is configured
+ */
+function isApiConfigured() {
+  return !!(process.env.SCALEWAY_API_KEY && process.env.SCALEWAY_API_KEY !== 'your_scaleway_api_key_here');
+}
+
+/**
  * Speech-to-Text Endpoint
  * Receives audio file and transcribes it using Scaleway Whisper API
  */
@@ -31,7 +38,7 @@ app.post('/api/transcribe', async (req, res) => {
     }
 
     // For demo purposes, if no API key is set, return mock response
-    if (!process.env.SCALEWAY_API_KEY || process.env.SCALEWAY_API_KEY === 'your_scaleway_api_key_here') {
+    if (!isApiConfigured()) {
       console.log('Demo mode: No API key configured, returning mock transcription');
       return res.json({ 
         text: 'Dies ist eine Demo-Transkription. Bitte konfigurieren Sie Ihren Scaleway API-Schlüssel in der .env-Datei.'
@@ -77,7 +84,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // For demo purposes, if no API key is set, return mock response
-    if (!process.env.SCALEWAY_API_KEY || process.env.SCALEWAY_API_KEY === 'your_scaleway_api_key_here') {
+    if (!isApiConfigured()) {
       console.log('Demo mode: No API key configured, returning mock chat response');
       const userMessage = messages[messages.length - 1]?.content || '';
       return res.json({ 
@@ -134,7 +141,7 @@ app.post('/api/chat', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    apiConfigured: !!(process.env.SCALEWAY_API_KEY && process.env.SCALEWAY_API_KEY !== 'your_scaleway_api_key_here')
+    apiConfigured: isApiConfigured()
   });
 });
 
@@ -145,5 +152,5 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 EuAiTalk server running on http://localhost:${PORT}`);
-  console.log(`📝 API configured: ${!!(process.env.SCALEWAY_API_KEY && process.env.SCALEWAY_API_KEY !== 'your_scaleway_api_key_here')}`);
+  console.log(`📝 API configured: ${isApiConfigured()}`);
 });

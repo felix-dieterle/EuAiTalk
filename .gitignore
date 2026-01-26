@@ -27,3 +27,15 @@ npm-debug.log*
 # Build output
 dist/
 build/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.cxx/
+android/captures/
+*.apk
+*.aab
+*.ap_
+*.dex

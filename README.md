@@ -204,6 +204,46 @@ Eine native Android-App ist verfügbar! Wir verwenden einen **WebView Wrapper An
 
 ---
 
+## 🔄 CI/CD Pipeline
+
+Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integration und Deployment:
+
+### Backend CI
+- **Trigger:** Pull Requests und Pushes auf `main` / `develop`
+- **Tests:**
+  - Node.js Dependency Installation
+  - Syntax-Validierung
+  - Server Health Check
+- **Workflow:** `.github/workflows/backend-ci.yml`
+
+### Android CI
+- **Trigger:** Pull Requests und Pushes auf `main` / `develop` (bei Android-Änderungen)
+- **Build:**
+  - Debug APK wird automatisch gebaut
+  - Lint-Checks werden ausgeführt
+- **Artefakte:** Debug APK verfügbar für 30 Tage
+- **Workflow:** `.github/workflows/android-ci.yml`
+
+### Android Release
+- **Trigger:**
+  - Git Tags (z.B. `v1.0.0`)
+  - Manueller Workflow-Dispatch
+- **Build:** Release APK (unsigned)
+- **Output:** Automatisches GitHub Release mit APK-Download
+- **Workflow:** `.github/workflows/android-release.yml`
+
+**Release erstellen:**
+```bash
+# Via Git Tag
+git tag -a v1.0.0 -m "Release 1.0.0"
+git push origin v1.0.0
+
+# Oder manuell über GitHub Actions Web UI
+# → Actions → Android Release → Run workflow
+```
+
+---
+
 ## 📄 Lizenz
 
 MIT

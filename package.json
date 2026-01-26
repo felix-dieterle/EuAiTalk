@@ -5,7 +5,8 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "node server/index.js",
+    "test:path": "node test-path-rendering.js"
   },
   "keywords": [
     "ai",
@@ -16,10 +17,13 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "node-fetch": "^2.7.0",
-    "express-rate-limit": "^6.11.2"
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.11.2",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.58.0"
   }
 }

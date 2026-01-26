@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path/Weg Rendering Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #canvas {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .info {
+            color: white;
+            text-align: center;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛤️ Weg/Path Rendering Test</h1>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <div class="info">
+        <h3>Über diesen Test</h3>
+        <p>Diese Seite zeigt die Weg-Generierung. Der Weg wird als zusammenhängende Plattformen gerendert.</p>
+        <p>Jede Platform ist ein farbiges Rechteck, das einen Abschnitt des Weges darstellt.</p>
+    </div>
+
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Path configuration
+        const pathConfig = {
+            platformWidth: 100,
+            platformHeight: 30,
+            gap: 20,
+            startX: 50,
+            startY: 500,
+            colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2']
+        };
+
+        // Generate path segments
+        function generatePath(numSegments) {
+            const segments = [];
+            let x = pathConfig.startX;
+            let y = pathConfig.startY;
+
+            for (let i = 0; i < numSegments; i++) {
+                // Random direction: 0=right, 1=up-right, 2=down-right
+                const direction = Math.floor(Math.random() * 3);
+                
+                // Move right
+                x += pathConfig.platformWidth + pathConfig.gap;
+                
+                // Adjust Y based on direction
+                if (direction === 1 && y > 100) {
+                    y -= 60; // up
+                } else if (direction === 2 && y < 500) {
+                    y += 60; // down
+                }
+
+                segments.push({
+                    x: x,
+                    y: y,
+                    width: pathConfig.platformWidth,
+                    height: pathConfig.platformHeight,
+                    color: pathConfig.colors[i % pathConfig.colors.length],
+                    number: i + 1
+                });
+            }
+
+            return segments;
+        }
+
+        // Draw a platform segment
+        function drawPlatform(segment) {
+            // Shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+
+            // Platform
+            ctx.fillStyle = segment.color;
+            ctx.fillRect(segment.x, segment.y, segment.width, segment.height);
+
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            // Border
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(segment.x, segment.y, segment.width, segment.height);
+
+            // Number label
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+                segment.number.toString(),
+                segment.x + segment.width / 2,
+                segment.y + segment.height / 2
+            );
+        }
+
+        // Draw connection between platforms
+        function drawConnection(from, to) {
+            ctx.strokeStyle = '#95A5A6';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            
+            ctx.beginPath();
+            ctx.moveTo(
+                from.x + from.width,
+                from.y + from.height / 2
+            );
+            ctx.lineTo(
+                to.x,
+                to.y + to.height / 2
+            );
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+        }
+
+        // Clear canvas
+        function clearCanvas() {
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Draw the entire path
+        function drawPath() {
+            clearCanvas();
+
+            // Generate path with 5 segments
+            const segments = generatePath(5);
+
+            // Add starting platform
+            const startPlatform = {
+                x: pathConfig.startX,
+                y: pathConfig.startY,
+                width: pathConfig.platformWidth,
+                height: pathConfig.platformHeight,
+                color: '#2ECC71',
+                number: 'S'
+            };
+
+            // Draw start platform
+            drawPlatform(startPlatform);
+
+            // Draw connections and platforms
+            let previousPlatform = startPlatform;
+            segments.forEach(segment => {
+                drawConnection(previousPlatform, segment);
+                drawPlatform(segment);
+                previousPlatform = segment;
+            });
+
+            // Draw title on canvas
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Weg-Generierung Visualisierung', 10, 30);
+            ctx.font = '14px Arial';
+            ctx.fillText('Start (S) → Platform 1 → 2 → 3 → 4 → 5', 10, 55);
+        }
+
+        // Initialize and draw
+        drawPath();
+    </script>
+</body>
+</html>

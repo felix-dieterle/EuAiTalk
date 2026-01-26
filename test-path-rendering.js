@@ -51,11 +51,20 @@ async function runTest() {
 
         console.log('🌐 Launching browser...');
         
-        // Launch browser
-        browser = await chromium.launch({
-            headless: true,
-            executablePath: '/usr/bin/chromium'
-        });
+        // Launch browser with environment-specific configuration
+        const launchOptions = {
+            headless: true
+        };
+        
+        // Use system browser if Playwright browsers aren't installed
+        if (process.env.CI || !process.env.PLAYWRIGHT_BROWSERS_PATH) {
+            const fs = require('fs');
+            if (fs.existsSync('/usr/bin/chromium')) {
+                launchOptions.executablePath = '/usr/bin/chromium';
+            }
+        }
+        
+        browser = await chromium.launch(launchOptions);
 
         const context = await browser.newContext({
             viewport: { width: 1200, height: 900 }
@@ -72,8 +81,11 @@ async function runTest() {
 
         console.log('✅ Page loaded\n');
 
-        // Wait a bit for any animations to complete
-        await page.waitForTimeout(500);
+        // Wait for canvas to be fully rendered
+        await page.waitForFunction(() => {
+            const canvas = document.getElementById('canvas');
+            return canvas && canvas.getContext('2d');
+        });
 
         console.log('📸 Taking screenshot...');
         

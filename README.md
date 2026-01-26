@@ -190,6 +190,26 @@ Eine native Android-App ist verfügbar! Wir verwenden einen **WebView Wrapper An
 
 ---
 
+## 🧪 Tests
+
+### Weg-Generierung Test
+
+Ein visueller Test zur Demonstration der Weg-Generierung:
+
+```bash
+npm run test:path
+```
+
+Dieser Test:
+- Startet automatisch den Server
+- Öffnet die Path-Rendering Testseite
+- Erstellt einen Screenshot in `screenshots/path-rendering.png`
+- Zeigt die Weg-Generierung mit mehreren verbundenen Plattformen
+
+Die Test-Seite ist auch manuell erreichbar unter: `http://localhost:3000/path-test.html`
+
+---
+
 ## 🎯 Für wen ist dieses Projekt?
 
 **Junior-Entwickler:** 

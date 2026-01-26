@@ -130,11 +130,16 @@ Siehe [SETUP.md](SETUP.md) für:
 - dotenv für Umgebungsvariablen
 - express-rate-limit für Sicherheit
 
-**Frontend:**
+**Frontend (Web):**
 - Vanilla JavaScript (einfach für Juniors)
 - Web Speech API (TTS)
 - MediaRecorder API (Audio-Aufnahme)
 - Moderne CSS mit Flexbox/Grid
+
+**Android:**
+- Kotlin
+- WebView (AndroidX WebKit)
+- Android SDK 24+ (Android 7.0+)
 
 **APIs:**
 - Scaleway STT (Whisper large-v3)
@@ -150,8 +155,38 @@ Siehe [SETUP.md](SETUP.md) für:
 - 🎭 4 Personas: Allgemein, Erzähler, Comedian, Bibel
 - 🔊 Automatische Sprachausgabe
 - 📱 Responsive Design (Mobile & Desktop)
+- 🤖 **Native Android App** (WebView Wrapper)
 - 🧪 Demo-Modus ohne API-Schlüssel
 - 🚀 Produktionsreif mit Rate-Limiting
+
+---
+
+## 📱 Android App
+
+Eine native Android-App ist verfügbar! Wir verwenden einen **WebView Wrapper Ansatz** für:
+
+- ✅ **Gemeinsames Backend**: Keine Code-Duplizierung
+- ✅ **Einfache Wartbarkeit**: Updates wirken sich auf alle Plattformen aus
+- ✅ **Geringe Fehleranfälligkeit**: Eine Code-Basis für die gesamte UI-Logik
+- ✅ **Schnelle Feature-Updates**: Neue Features nur einmal implementieren
+- ✅ **10x schnellere Entwicklung**: 1-2 Tage statt 2-3 Wochen
+- ✅ **Massive Kostenersparnis**: ~7000-12500€ weniger im ersten Jahr
+
+### 📖 Dokumentation
+
+- [android/QUICKSTART.md](android/QUICKSTART.md) - 5-Minuten Setup
+- [android/README.md](android/README.md) - Vollständige Anleitung
+- [android/ARCHITECTURE.md](android/ARCHITECTURE.md) - Architektur-Entscheidungen
+- [android/COMPARISON.md](android/COMPARISON.md) - WebView vs. Native Vergleich
+- [android/PRODUCTION.md](android/PRODUCTION.md) - Deployment-Guide
+- [android/SUMMARY.md](android/SUMMARY.md) - Implementierungs-Zusammenfassung
+
+**Warum WebView statt nativem UI?**
+- Für unseren Use-Case (Chat-basierte Audio-App) ist ein WebView optimal
+- Die Web-APIs (MediaRecorder, Speech) funktionieren perfekt in modernen WebViews
+- Keine separate Implementierung = weniger Wartungsaufwand
+- Frontend-Updates erfordern kein App Store Update
+- Alle benötigten Features verfügbar ohne erhöhte Fehleranfälligkeit
 
 ---
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Production configuration: Only HTTPS allowed -->
+    <base-config cleartextTrafficPermitted="false" />
+    
+    <!-- ⚠️ Development configuration: Allow localhost for debugging -->
+    <!-- TODO: Remove or use build-specific configs for production -->
+    <!-- See android/PRODUCTION.md for production setup -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android emulator -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+    
+    <!-- For real device testing on local network -->
+    <!-- Add your local development IP here if needed -->
+    <!-- <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.1.100</domain>
+    </domain-config> -->
+</network-security-config>

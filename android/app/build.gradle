@@ -18,6 +18,19 @@ android {
         buildConfigField "String", "SERVER_URL", "\"http://10.0.2.2:3000\""
     }
 
+    // Signing configuration from environment variables (for CI/CD)
+    signingConfigs {
+        release {
+            // Use environment variables if available (CI/CD), otherwise skip signing
+            if (System.getenv("ANDROID_KEYSTORE_FILE") != null) {
+                storeFile file(System.getenv("ANDROID_KEYSTORE_FILE"))
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -27,6 +40,11 @@ android {
             // Siehe android/PRODUCTION.md für sichere Konfigurationsmethoden
             // TODO: Ersetze mit deiner echten Server-URL vor dem Release!
             buildConfigField "String", "SERVER_URL", "\"https://your-production-server.com\""
+            
+            // Use signing config if keystore is available
+            if (System.getenv("ANDROID_KEYSTORE_FILE") != null) {
+                signingConfig signingConfigs.release
+            }
         }
         debug {
             minifyEnabled false

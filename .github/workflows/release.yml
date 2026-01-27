@@ -1,0 +1,243 @@
+name: Release on Merge
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    outputs:
+      version: ${{ steps.version.outputs.new_version }}
+      tag: ${{ steps.version.outputs.tag }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Get current version
+      id: current_version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Current version: $VERSION"
+    
+    - name: Calculate new version
+      id: version
+      run: |
+        CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
+        
+        # Determine version bump type
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          BUMP="${{ github.event.inputs.version_bump }}"
+        else
+          # Default to patch for automatic merges
+          BUMP="patch"
+        fi
+        
+        # Parse current version
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        
+        # Increment based on bump type
+        case $BUMP in
+          major)
+            major=$((major + 1))
+            minor=0
+            patch=0
+            ;;
+          minor)
+            minor=$((minor + 1))
+            patch=0
+            ;;
+          patch)
+            patch=$((patch + 1))
+            ;;
+        esac
+        
+        NEW_VERSION="${major}.${minor}.${patch}"
+        TAG="v${NEW_VERSION}"
+        
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "New version: $NEW_VERSION (bump: $BUMP)"
+    
+    - name: Update package.json version
+      run: |
+        NEW_VERSION="${{ steps.version.outputs.new_version }}"
+        node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json')); pkg.version='$NEW_VERSION'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2)+'\n');"
+        echo "✅ Updated package.json to version $NEW_VERSION"
+    
+    - name: Update Android version
+      run: |
+        NEW_VERSION="${{ steps.version.outputs.new_version }}"
+        
+        # Calculate versionCode from version (e.g., 1.2.3 -> 10203)
+        IFS='.' read -r major minor patch <<< "$NEW_VERSION"
+        VERSION_CODE=$((major * 10000 + minor * 100 + patch))
+        
+        # Update build.gradle
+        sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
+        sed -i "s/versionName \".*\"/versionName \"$NEW_VERSION\"/" android/app/build.gradle
+        
+        echo "✅ Updated Android version to $NEW_VERSION (code: $VERSION_CODE)"
+    
+    - name: Commit version bump
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add package.json android/app/build.gradle
+        git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+        git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.new_version }}"
+        git push origin main
+        git push origin "${{ steps.version.outputs.tag }}"
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        
+        if [ -z "$LAST_TAG" ]; then
+          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        else
+          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+        fi
+        
+        # Save to file (handle multiline)
+        echo "$COMMITS" > /tmp/changelog.txt
+        echo "changelog_file=/tmp/changelog.txt" >> $GITHUB_OUTPUT
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Release ${{ steps.version.outputs.new_version }}
+        body: |
+          ## EuAiTalk v${{ steps.version.outputs.new_version }}
+          
+          ### 🎉 What's New
+          
+          $(cat /tmp/changelog.txt)
+          
+          ### 📦 Assets
+          
+          Backend and Android artifacts will be uploaded shortly by the build jobs.
+          
+          ### 🚀 Installation
+          
+          **Backend:**
+          ```bash
+          npm install
+          npm start
+          ```
+          
+          **Android:**
+          Download the APK below and install it on your Android device.
+        draft: false
+        prerelease: false
+
+  build-backend:
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.create-release.outputs.tag }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Create backend package
+      run: |
+        mkdir -p release-backend
+        cp -r server public package.json package-lock.json .env.example release-backend/
+        cd release-backend
+        tar -czf ../euaitalk-backend-${{ needs.create-release.outputs.version }}.tar.gz .
+        cd ..
+        echo "✅ Created backend package"
+    
+    - name: Upload backend to release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.create-release.outputs.tag }}
+        files: |
+          euaitalk-backend-${{ needs.create-release.outputs.version }}.tar.gz
+
+  build-android:
+    needs: create-release
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.create-release.outputs.tag }}
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.2'
+    
+    - name: Build release APK
+      run: cd android && gradle assembleRelease --stacktrace
+    
+    - name: Rename APK
+      run: |
+        if [ -f android/app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+          APK_FILE="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+        elif [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+          APK_FILE="android/app/build/outputs/apk/release/app-release.apk"
+        else
+          echo "Error: Release APK not found"
+          exit 1
+        fi
+        
+        mv "$APK_FILE" "EuAiTalk-${{ needs.create-release.outputs.version }}.apk"
+        echo "✅ Renamed APK to EuAiTalk-${{ needs.create-release.outputs.version }}.apk"
+    
+    - name: Upload APK to release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.create-release.outputs.tag }}
+        files: |
+          EuAiTalk-${{ needs.create-release.outputs.version }}.apk

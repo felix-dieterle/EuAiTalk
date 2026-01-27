@@ -26,7 +26,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
     
     - name: Validate HTML
       run: |
@@ -49,7 +48,7 @@ jobs:
     - name: Test static file serving
       run: |
         # Install dependencies and start server
-        npm ci
+        npm install
         
         # Start server in background and save PID
         npm start &

@@ -49,11 +49,20 @@ This is your keystore file encoded in base64.
 
 **To create this value:**
 
+**On Linux:**
 ```bash
-# On Linux/Mac
 base64 -w 0 euaitalk-release.keystore
+```
 
-# On Windows (PowerShell)
+**On macOS:**
+```bash
+base64 -i euaitalk-release.keystore
+# or
+base64 < euaitalk-release.keystore
+```
+
+**On Windows (PowerShell):**
+```powershell
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("euaitalk-release.keystore"))
 ```
 
@@ -139,7 +148,10 @@ Building unsigned release APK (no keystore configured)...
 
 **Solution**: 
 - Ensure you copied the complete base64 string (no line breaks)
-- Re-encode the keystore: `base64 -w 0 euaitalk-release.keystore`
+- Re-encode the keystore using the correct command for your OS:
+  - **Linux**: `base64 -w 0 euaitalk-release.keystore`
+  - **macOS**: `base64 -i euaitalk-release.keystore` or `base64 < euaitalk-release.keystore`
+  - **Windows**: Use PowerShell command from the setup section
 - Update the `ANDROID_KEYSTORE_BASE64` secret
 
 ### Build fails with "password incorrect"

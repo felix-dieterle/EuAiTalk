@@ -22,11 +22,20 @@ android {
     signingConfigs {
         release {
             // Use environment variables if available (CI/CD), otherwise skip signing
-            if (System.getenv("ANDROID_KEYSTORE_FILE") != null) {
-                storeFile file(System.getenv("ANDROID_KEYSTORE_FILE"))
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            def keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
+            if (keystoreFile != null) {
+                def storePass = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                def alias = System.getenv("ANDROID_KEY_ALIAS")
+                def keyPass = System.getenv("ANDROID_KEY_PASSWORD")
+                
+                if (storePass == null || alias == null || keyPass == null) {
+                    throw new GradleException("Keystore file is set, but missing required environment variables (ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, or ANDROID_KEY_PASSWORD)")
+                }
+                
+                storeFile file(keystoreFile)
+                storePassword storePass
+                keyAlias alias
+                keyPassword keyPass
             }
         }
     }

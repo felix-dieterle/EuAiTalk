@@ -20,6 +20,11 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     
+    # Skip if commit message contains [skip ci] or is from github-actions bot
+    if: |
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      github.event.head_commit.author.email != '41898282+github-actions[bot]@users.noreply.github.com'
+    
     permissions:
       contents: write
     
@@ -36,6 +41,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
     
     - name: Get current version
       id: current_version
@@ -97,9 +103,9 @@ jobs:
         IFS='.' read -r major minor patch <<< "$NEW_VERSION"
         VERSION_CODE=$((major * 10000 + minor * 100 + patch))
         
-        # Update build.gradle
-        sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" android/app/build.gradle
-        sed -i "s/versionName \".*\"/versionName \"$NEW_VERSION\"/" android/app/build.gradle
+        # Update build.gradle with more robust patterns
+        sed -i "s/versionCode\s\+[0-9]\+/versionCode $VERSION_CODE/" android/app/build.gradle
+        sed -i "s/versionName\s\+\"[^\"]*\"/versionName \"$NEW_VERSION\"/" android/app/build.gradle
         
         echo "✅ Updated Android version to $NEW_VERSION (code: $VERSION_CODE)"
     
@@ -108,7 +114,7 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add package.json android/app/build.gradle
-        git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+        git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
         git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.new_version }}"
         git push origin main
         git push origin "${{ steps.version.outputs.tag }}"
@@ -116,18 +122,28 @@ jobs:
     - name: Generate changelog
       id: changelog
       run: |
-        # Get commits since last tag
-        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        # Get the previous tag before we create the new one
+        PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
         
-        if [ -z "$LAST_TAG" ]; then
-          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        if [ -z "$PREV_TAG" ]; then
+          # No previous tags, get all commits
+          COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges HEAD~1)
         else
-          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          # Get commits since previous tag
+          COMMITS=$(git log ${PREV_TAG}..HEAD~1 --pretty=format:"- %s (%h)" --no-merges)
         fi
         
-        # Save to file (handle multiline)
-        echo "$COMMITS" > /tmp/changelog.txt
-        echo "changelog_file=/tmp/changelog.txt" >> $GITHUB_OUTPUT
+        # Handle empty changelog
+        if [ -z "$COMMITS" ]; then
+          COMMITS="- No changes recorded"
+        fi
+        
+        # Save to environment variable for the release step
+        {
+          echo 'CHANGELOG<<EOF'
+          echo "$COMMITS"
+          echo 'EOF'
+        } >> $GITHUB_ENV
     
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
@@ -139,7 +155,7 @@ jobs:
           
           ### 🎉 What's New
           
-          $(cat /tmp/changelog.txt)
+          ${{ env.CHANGELOG }}
           
           ### 📦 Assets
           
@@ -149,6 +165,15 @@ jobs:
           
           **Backend:**
           ```bash
+          # Extract the tarball
+          tar -xzf euaitalk-backend-${{ steps.version.outputs.new_version }}.tar.gz
+          cd euaitalk-backend-${{ steps.version.outputs.new_version }}
+          
+          # Configure environment
+          cp .env.example .env
+          # Edit .env and add your API keys
+          
+          # Install and start
           npm install
           npm start
           ```
@@ -174,6 +199,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
     
     - name: Install dependencies
       run: npm ci

@@ -26,6 +26,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
     
     - name: Validate HTML
       run: |
@@ -49,9 +50,27 @@ jobs:
       run: |
         # Install dependencies and start server
         npm ci
-        timeout 10 npm start &
+        
+        # Start server in background and save PID
+        npm start &
         SERVER_PID=$!
-        sleep 5
+        
+        # Ensure server is killed on exit
+        trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+        
+        # Wait for server to be ready (with timeout)
+        echo "Waiting for server to start..."
+        for i in {1..10}; do
+          if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
+            echo "Server is ready!"
+            break
+          fi
+          if [ $i -eq 10 ]; then
+            echo "❌ Server failed to start within timeout"
+            exit 1
+          fi
+          sleep 1
+        done
         
         # Test that static files are accessible
         response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ || echo "000")
@@ -63,8 +82,7 @@ jobs:
         css_response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/styles.css || echo "000")
         echo "CSS response: $css_response"
         
-        kill $SERVER_PID || true
-        
+        # Verify all responses are 200
         if [[ "$response" == "200" ]] && [[ "$js_response" == "200" ]] && [[ "$css_response" == "200" ]]; then
           echo "✅ All static files are accessible"
           exit 0

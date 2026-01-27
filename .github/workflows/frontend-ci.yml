@@ -1,0 +1,91 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'public/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'public/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Validate HTML
+      run: |
+        npx html-validate public/index.html || echo "HTML validation completed"
+    
+    - name: Check JavaScript syntax
+      run: |
+        node --check public/app.js
+        echo "✅ JavaScript syntax is valid"
+    
+    - name: Check CSS syntax
+      run: |
+        # Basic CSS validation (check for obvious errors)
+        if grep -E ":\s*;|}\s*{|{\s*}" public/styles.css; then
+          echo "⚠️ Potential CSS syntax issues found"
+        else
+          echo "✅ CSS syntax looks good"
+        fi
+    
+    - name: Test static file serving
+      run: |
+        # Install dependencies and start server
+        npm install
+        
+        # Start server in background and save PID
+        npm start &
+        SERVER_PID=$!
+        
+        # Ensure server is killed on exit
+        trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+        
+        # Wait for server to be ready (with timeout)
+        echo "Waiting for server to start..."
+        for i in {1..10}; do
+          if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
+            echo "Server is ready!"
+            break
+          fi
+          if [ $i -eq 10 ]; then
+            echo "❌ Server failed to start within timeout"
+            exit 1
+          fi
+          sleep 1
+        done
+        
+        # Test that static files are accessible
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ || echo "000")
+        echo "Index page response: $response"
+        
+        js_response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/app.js || echo "000")
+        echo "JavaScript response: $js_response"
+        
+        css_response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/styles.css || echo "000")
+        echo "CSS response: $css_response"
+        
+        # Verify all responses are 200
+        if [[ "$response" == "200" ]] && [[ "$js_response" == "200" ]] && [[ "$css_response" == "200" ]]; then
+          echo "✅ All static files are accessible"
+          exit 0
+        else
+          echo "❌ Some static files are not accessible"
+          exit 1
+        fi

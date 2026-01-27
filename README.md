@@ -208,6 +208,16 @@ Eine native Android-App ist verfügbar! Wir verwenden einen **WebView Wrapper An
 
 Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integration und Deployment:
 
+### Release on Merge (Neu!)
+- **Trigger:** Automatisch bei Merge auf `main`
+- **Automatisierung:**
+  - Version Bump (Patch standardmäßig)
+  - Git Tag erstellen
+  - Changelog generieren
+  - Backend & Android bauen
+  - GitHub Release mit allen Artefakten
+- **Workflow:** `.github/workflows/release.yml`
+
 ### Backend CI
 - **Trigger:** Pull Requests und Pushes auf `main` / `develop`
 - **Tests:**
@@ -215,6 +225,15 @@ Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integra
   - Syntax-Validierung
   - Server Health Check
 - **Workflow:** `.github/workflows/backend-ci.yml`
+
+### Frontend CI
+- **Trigger:** Pull Requests und Pushes auf `main` / `develop` (bei Frontend-Änderungen)
+- **Validierung:**
+  - HTML Struktur-Check
+  - JavaScript Syntax-Validierung
+  - CSS Prüfung
+  - Static File Serving Test
+- **Workflow:** `.github/workflows/frontend-ci.yml`
 
 ### Android CI
 - **Trigger:** Pull Requests und Pushes auf `main` / `develop` (bei Android-Änderungen)
@@ -224,22 +243,28 @@ Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integra
 - **Artefakte:** Debug APK verfügbar für 30 Tage
 - **Workflow:** `.github/workflows/android-ci.yml`
 
-### Android Release
+### Android Release (Legacy)
 - **Trigger:**
   - Git Tags (z.B. `v1.0.0`)
   - Manueller Workflow-Dispatch
 - **Build:** Release APK (unsigned)
 - **Output:** Automatisches GitHub Release mit APK-Download
 - **Workflow:** `.github/workflows/android-release.yml`
+- **Hinweis:** Für neue Releases bitte die "Release on Merge" Workflow verwenden
 
 **Release erstellen:**
 ```bash
-# Via Git Tag
+# Automatisch: Einfach zu main mergen
+git checkout -b feature/my-feature
+git commit -m "feat: neue Funktion"
+# PR erstellen und mergen → Release wird automatisch erstellt
+
+# Manuell mit Version Auswahl:
+# → GitHub Actions → Release on Merge → Run workflow
+
+# Legacy (nur Android): Via Git Tag
 git tag -a v1.0.0 -m "Release 1.0.0"
 git push origin v1.0.0
-
-# Oder manuell über GitHub Actions Web UI
-# → Actions → Android Release → Run workflow
 ```
 
 ---

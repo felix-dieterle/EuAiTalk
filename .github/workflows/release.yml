@@ -33,7 +33,8 @@ jobs:
           fi
           
           # Check if commit message contains [skip ci]
-          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]]; then
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          if [[ "$COMMIT_MESSAGE" == *"[skip ci]"* ]]; then
             echo "should_release=false" >> $GITHUB_OUTPUT
             echo "⏭️ Skipping release: commit message contains [skip ci]"
             exit 0

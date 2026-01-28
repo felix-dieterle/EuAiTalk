@@ -23,7 +23,7 @@ android {
         release {
             // Use environment variables if available (CI/CD), otherwise skip signing
             def keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
-            if (keystoreFile != null) {
+            if (keystoreFile != null && !keystoreFile.isEmpty()) {
                 def storePass = System.getenv("ANDROID_KEYSTORE_PASSWORD")
                 def alias = System.getenv("ANDROID_KEY_ALIAS")
                 def keyPass = System.getenv("ANDROID_KEY_PASSWORD")
@@ -51,7 +51,8 @@ android {
             buildConfigField "String", "SERVER_URL", "\"https://your-production-server.com\""
             
             // Use signing config if keystore is available
-            if (System.getenv("ANDROID_KEYSTORE_FILE") != null) {
+            def keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
+            if (keystoreFile != null && !keystoreFile.isEmpty()) {
                 signingConfig signingConfigs.release
             }
         }

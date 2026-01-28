@@ -28,7 +28,9 @@ android {
                 def alias = System.getenv("ANDROID_KEY_ALIAS")
                 def keyPass = System.getenv("ANDROID_KEY_PASSWORD")
                 
-                if (storePass == null || alias == null || keyPass == null) {
+                if (storePass == null || storePass.isEmpty() || 
+                    alias == null || alias.isEmpty() || 
+                    keyPass == null || keyPass.isEmpty()) {
                     throw new GradleException("Keystore file is set, but missing required environment variables (ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, or ANDROID_KEY_PASSWORD)")
                 }
                 

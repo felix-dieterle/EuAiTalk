@@ -17,13 +17,36 @@ on:
           - major
 
 jobs:
-  create-release:
+  check-should-release:
     runs-on: ubuntu-latest
-    
-    # Skip if commit message contains [skip ci] or is from github-actions bot
-    if: |
-      !contains(github.event.head_commit.message, '[skip ci]') &&
-      github.event.head_commit.author.email != '41898282+github-actions[bot]@users.noreply.github.com'
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+    steps:
+      - name: Check if release should be created
+        id: check
+        run: |
+          # Check if commit message contains [skip ci]
+          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]]; then
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping release: commit message contains [skip ci]"
+            exit 0
+          fi
+          
+          # Check if commit is from a bot (github-actions, copilot, etc.)
+          AUTHOR_EMAIL="${{ github.event.head_commit.author.email }}"
+          if [[ "$AUTHOR_EMAIL" == *"@users.noreply.github.com" ]] && [[ "$AUTHOR_EMAIL" != *"felix-dieterle"* ]]; then
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping release: commit is from bot ($AUTHOR_EMAIL)"
+            exit 0
+          fi
+          
+          echo "should_release=true" >> $GITHUB_OUTPUT
+          echo "✅ Release will be created"
+
+  create-release:
+    needs: check-should-release
+    if: needs.check-should-release.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
     
     permissions:
       contents: write

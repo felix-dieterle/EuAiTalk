@@ -25,6 +25,13 @@ jobs:
       - name: Check if release should be created
         id: check
         run: |
+          # For workflow_dispatch events, always create release
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "✅ Manual workflow dispatch - release will be created"
+            exit 0
+          fi
+          
           # Check if commit message contains [skip ci]
           if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]]; then
             echo "should_release=false" >> $GITHUB_OUTPUT

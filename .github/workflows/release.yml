@@ -19,7 +19,8 @@ on:
 jobs:
   check-should-release:
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      contents: read
     outputs:
       should_release: ${{ steps.check.outputs.should_release }}
     steps:

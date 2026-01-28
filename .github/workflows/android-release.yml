@@ -1,11 +1,6 @@
 name: Android Release
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       version:
@@ -23,16 +18,14 @@ jobs:
       - name: Check if workflow should run
         id: check
         run: |
-          # This workflow should only run on tag pushes (v*) or manual workflow_dispatch
+          # This workflow only runs via manual workflow_dispatch
+          # The main release workflow (release.yml) handles automatic releases
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
             echo "✅ Manual workflow dispatch - workflow will run"
-          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "✅ Tag push detected - workflow will run"
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "⏭️ Skipping: not a tag push or manual dispatch (ref: ${{ github.ref }})"
+            echo "⏭️ Skipping: This workflow only runs via manual dispatch. Use release.yml for automatic releases."
           fi
 
   release:

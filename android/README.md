@@ -150,7 +150,25 @@ Siehe auch: [app/src/main/res/ICONS.md](app/src/main/res/ICONS.md) für Details.
 
 ## 📦 Release Build
 
-Für einen signierten Release Build:
+### APK-Signierung und Installation
+
+**Wichtig:** Android-Apps müssen signiert sein, um installiert werden zu können.
+
+Die App verwendet automatisch die richtige Signierung:
+- **Mit Keystore** (Produktions-Release): Verwendet deine Release-Signatur
+- **Ohne Keystore** (Entwicklung/Testing): Verwendet Debug-Signatur als Fallback
+
+**⚠️ Sicherheitshinweis:** Debug-signierte APKs sollten **NIEMALS** öffentlich verteilt oder im Play Store veröffentlicht werden! Sie sind nur für lokale Entwicklung und Tests gedacht.
+
+Für öffentliche Releases (GitHub Releases, Play Store) **muss** ein Release-Keystore konfiguriert werden. Siehe PRODUCTION.md für Details.
+
+**Fehlerbehebung "App wurde nicht installiert":**
+- Für **lokale Entwicklung**: Debug-Signatur wird automatisch verwendet
+- Für **öffentliche Verteilung**: Konfiguriere einen Release-Keystore (siehe unten)
+- Stelle sicher, dass "Installation aus unbekannten Quellen" aktiviert ist
+- Deinstalliere alte Versionen der App vor einer neuen Installation
+
+### Signierten Release Build erstellen:
 
 1. Keystore erstellen:
 ```bash
@@ -169,6 +187,8 @@ storeFile=../euaitalk.keystore
 ```bash
 ./gradlew assembleRelease
 ```
+
+Ohne Keystore wird automatisch die Debug-Signatur verwendet, was für **lokale Tests und Entwicklung** vollkommen ausreichend ist. Für öffentliche Verteilung (Play Store, GitHub Releases) ist jedoch ein Release-Keystore erforderlich.
 
 ## 🚢 Deployment
 

@@ -36,7 +36,7 @@ jobs:
       run: |
         if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
           echo "Setting up Android keystore for signing..."
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/release.keystore
+          base64 --decode > android/release.keystore <<< "$ANDROID_KEYSTORE_BASE64"
           echo "✅ Keystore file created"
         else
           echo "⚠️ No keystore configured - APK will be unsigned"

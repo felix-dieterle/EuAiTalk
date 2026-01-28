@@ -250,7 +250,7 @@ Für Updates:
 **"App wurde nicht installiert" Fehler:**
 
 **Für lokale Entwicklung:**
-- ✅ **Gelöst ab v1.0.4**: APKs verwenden automatisch Debug-Signatur wenn kein Keystore vorhanden
+- ✅ APKs verwenden automatisch Debug-Signatur wenn kein Keystore vorhanden
 - Stelle sicher, dass "Installation aus unbekannten Quellen" in den Android-Einstellungen aktiviert ist
 - Deinstalliere vorherige Versionen der App komplett vor der Installation
 - Prüfe, ob genug Speicherplatz vorhanden ist
@@ -259,7 +259,7 @@ Für Updates:
 - ⚠️ **Sicherheitsrisiko**: Debug-signierte APKs sollten NICHT öffentlich verteilt werden
 - **Lösung**: Konfiguriere einen Release-Keystore in GitHub Secrets oder lokal
 - Für Play Store ist ein Release-Keystore zwingend erforderlich
-- Bei älteren APK-Versionen (< v1.0.4): APK war unsigniert und konnte nicht installiert werden
+- Bei älteren Versionen: APK war möglicherweise unsigniert und konnte nicht installiert werden
 
 **Build scheitert:**
 - `./gradlew clean` ausführen

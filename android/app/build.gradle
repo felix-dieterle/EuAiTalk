@@ -61,6 +61,13 @@ android {
             if (keystoreFile) {
                 signingConfig signingConfigs.release
             } else {
+                // Warn if building in CI/CD without proper signing
+                def isCI = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
+                if (isCI) {
+                    logger.warn("⚠️  WARNING: Building release APK in CI without keystore - using debug signing!")
+                    logger.warn("⚠️  Debug-signed APKs should NOT be distributed publicly!")
+                    logger.warn("⚠️  Configure ANDROID_KEYSTORE_FILE and related secrets for release builds.")
+                }
                 // Fallback to debug signing for local development/testing only
                 // DO NOT use debug-signed APKs for public distribution!
                 signingConfig signingConfigs.debug

@@ -163,7 +163,7 @@ Die App verwendet automatisch die richtige Signierung:
 Für öffentliche Releases (GitHub Releases, Play Store) **muss** ein Release-Keystore konfiguriert werden. Siehe PRODUCTION.md für Details.
 
 **Fehlerbehebung "App wurde nicht installiert":**
-- Für **lokale Entwicklung**: Debug-Signatur wird automatisch verwendet (seit v1.0.4)
+- Für **lokale Entwicklung**: Debug-Signatur wird automatisch verwendet
 - Für **öffentliche Verteilung**: Konfiguriere einen Release-Keystore (siehe unten)
 - Stelle sicher, dass "Installation aus unbekannten Quellen" aktiviert ist
 - Deinstalliere alte Versionen der App vor einer neuen Installation
@@ -188,7 +188,7 @@ storeFile=../euaitalk.keystore
 ./gradlew assembleRelease
 ```
 
-Ohne Keystore wird automatisch die Debug-Signatur verwendet, was für Tests vollkommen ausreichend ist.
+Ohne Keystore wird automatisch die Debug-Signatur verwendet, was für **lokale Tests und Entwicklung** vollkommen ausreichend ist. Für öffentliche Verteilung (Play Store, GitHub Releases) ist jedoch ein Release-Keystore erforderlich.
 
 ## 🚢 Deployment
 

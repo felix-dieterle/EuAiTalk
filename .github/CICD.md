@@ -29,8 +29,14 @@ The project uses GitHub Actions to automate testing, building, and releasing of 
 **Output:**
 - GitHub Release with version tag
 - Backend package: `euaitalk-backend-{VERSION}.tar.gz`
-- Android APK: `EuAiTalk-{VERSION}.apk`
+- Android APK: `EuAiTalk-{VERSION}.apk` (signed if keystore is configured, unsigned otherwise)
 - Automated changelog from commits
+
+**APK Signing:**
+- The workflow supports automatic APK signing via GitHub Secrets
+- If configured, produces signed APKs ready for distribution
+- Falls back to unsigned APKs if secrets are not set
+- See [SIGNING_SETUP.md](SIGNING_SETUP.md) for configuration instructions
 
 **Success Criteria:**
 - Version is bumped correctly
@@ -148,8 +154,12 @@ The project uses GitHub Actions to automate testing, building, and releasing of 
    - Installation instructions
 
 **Output:**
-- GitHub Release with versioned APK
+- GitHub Release with versioned APK (signed if keystore is configured)
 - Release notes with installation guidance
+
+**APK Signing:**
+- Supports automatic signing via GitHub Secrets
+- See [SIGNING_SETUP.md](SIGNING_SETUP.md) for setup instructions
 
 **Success Criteria:**
 - Release APK builds successfully
@@ -327,7 +337,7 @@ Potential enhancements to consider:
 1. **Backend Testing**: Add unit tests with Jest or Mocha
 2. **Android Testing**: Add instrumented tests and unit tests
 3. **Code Coverage**: Generate and upload coverage reports
-4. **Signed APKs**: Add keystore signing for production releases
+4. ~~**Signed APKs**: Add keystore signing for production releases~~ ✅ **Implemented** - See [SIGNING_SETUP.md](SIGNING_SETUP.md)
 5. **Deployment**: Auto-deploy backend to cloud service (Heroku, AWS, etc.)
 6. **Notifications**: Send Slack/Discord notifications on build failures
 7. **Performance**: Add build caching for faster builds

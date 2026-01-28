@@ -67,16 +67,17 @@ This document provides a quick overview of the CI/CD implementation for EuAiTalk
 ┌─────────────────────────────────────────────────────────────┐
 │                 Android Release Workflow (Legacy)            │
 ├─────────────────────────────────────────────────────────────┤
-│ Trigger: Tag push (v*) OR Manual dispatch                   │
-│ Note: Use Release on Merge workflow for new releases        │
+│ Trigger: Manual dispatch ONLY (tag trigger removed)         │
+│ Note: Use Release on Merge workflow for automatic releases  │
 │ Steps:                                                       │
-│   1. ✓ Setup JDK 17 + Gradle 8.2                          │
-│   2. ✓ Extract version from tag/input                      │
+│   1. ✓ Setup JDK 17 + Gradle 8.7                          │
+│   2. ✓ Extract version from workflow input                 │
 │   3. ✓ Build release APK                                   │
 │   4. ✓ Rename to EuAiTalk-{VERSION}.apk                    │
 │   5. ✓ Create GitHub Release                               │
 │   6. ✓ Upload APK to release                               │
 │ Security: ✓ Minimal permissions (contents: write)          │
+│ Change: Tag trigger removed to prevent duplicate releases   │
 └─────────────────────────────────────────────────────────────┘
 ```
 

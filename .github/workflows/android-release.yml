@@ -1,9 +1,6 @@
 name: Android Release
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       version:
@@ -43,11 +40,8 @@ jobs:
     - name: Get version
       id: version
       run: |
-        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-        else
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-        fi
+        echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        echo "Using version: ${{ github.event.inputs.version }}"
     
     - name: Build release APK
       env:
@@ -93,7 +87,7 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.version) || github.ref_name }}
+        tag_name: v${{ github.event.inputs.version }}
         name: Release ${{ steps.version.outputs.VERSION }}
         body: |
           ## EuAiTalk v${{ steps.version.outputs.VERSION }}
@@ -102,8 +96,9 @@ jobs:
           Download the APK file below and install it on your Android device.
           
           ### ⚠️ Important Notes
-          - This is an unsigned APK. You may need to enable "Install from unknown sources" on your device.
-          - For production releases, consider signing the APK with a keystore.
+          - This APK may be signed or unsigned depending on repository configuration.
+          - Unsigned APKs require enabling "Install from unknown sources" on your device.
+          - For production use, configure APK signing via repository secrets.
           
           ### 🚀 Changes
           See commit history for details.

@@ -127,25 +127,21 @@ The project uses GitHub Actions to automate testing, building, and releasing of 
 
 ### 5. Android Release (`android-release.yml`) [Legacy]
 
-**Note:** This workflow is maintained for backward compatibility. For new releases, use the main Release workflow (`release.yml`) instead.
+**Note:** This workflow is maintained for backward compatibility and manual Android-only releases. For automated releases on merge, use the main Release workflow (`release.yml`) instead.
 
-**Purpose:** Creates production-ready APK releases and publishes them to GitHub Releases.
+**Purpose:** Creates production-ready APK releases and publishes them to GitHub Releases. This workflow is now **manual-only** to avoid conflicts with the automated release workflow.
 
 **Triggers:**
 
-1. **Tag Push** (Automatic):
-   ```bash
-   git tag -a v1.0.0 -m "Release version 1.0.0"
-   git push origin v1.0.0
-   ```
+**Manual Dispatch Only** (via GitHub UI):
+- Go to Actions → Android Release → Run workflow
+- Enter version number (e.g., `1.0.0`)
 
-2. **Manual Dispatch** (via GitHub UI):
-   - Go to Actions → Android Release → Run workflow
-   - Enter version number (e.g., `1.0.0`)
+**Note:** Automatic tag-based triggering has been disabled to prevent duplicate releases. The `release.yml` workflow handles automatic releases when tags are created.
 
 **Steps:**
-1. **Setup**: Checks out code, sets up JDK 17, and Gradle 8.2
-2. **Version**: Extracts version from tag or workflow input
+1. **Setup**: Checks out code, sets up JDK 17, and Gradle 8.7
+2. **Version**: Uses version from workflow input
 3. **Build**: Compiles release APK with `gradle assembleRelease`
 4. **Rename**: Renames APK to `EuAiTalk-{VERSION}.apk`
 5. **Release**: Creates GitHub release with:

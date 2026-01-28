@@ -50,10 +50,15 @@ android {
             // TODO: Ersetze mit deiner echten Server-URL vor dem Release!
             buildConfigField "String", "SERVER_URL", "\"https://your-production-server.com\""
             
-            // Use signing config if keystore is available
+            // Use signing config if keystore is available, otherwise use debug signing
+            // This allows unsigned builds to be installable on devices
             def keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
             if (keystoreFile) {
                 signingConfig signingConfigs.release
+            } else {
+                // Fallback to debug signing for development/testing
+                // This ensures the APK can be installed even without a release keystore
+                signingConfig signingConfigs.debug
             }
         }
         debug {

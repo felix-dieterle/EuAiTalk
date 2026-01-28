@@ -93,6 +93,11 @@ android:roundIcon="@mipmap/ic_launcher_round"
 
 ### 4. Keystore erstellen (für Signierung)
 
+**Hinweis:** Seit v1.0.4 ist ein Keystore **optional** für Entwicklung/Testing. 
+Die App verwendet automatisch Debug-Signierung als Fallback, sodass APKs immer installierbar sind.
+
+**Für Produktion (Play Store)** ist ein Release-Keystore erforderlich:
+
 ```bash
 keytool -genkey -v -keystore euaitalk-release.keystore \
     -alias euaitalk \
@@ -100,6 +105,18 @@ keytool -genkey -v -keystore euaitalk-release.keystore \
     -keysize 2048 \
     -validity 10000
 ```
+
+**Für CI/CD (GitHub Actions):**
+
+Die Build-Konfiguration in `app/build.gradle` unterstützt bereits Umgebungsvariablen:
+- `ANDROID_KEYSTORE_FILE`: Pfad zum Keystore
+- `ANDROID_KEYSTORE_PASSWORD`: Store-Passwort
+- `ANDROID_KEY_ALIAS`: Key-Alias
+- `ANDROID_KEY_PASSWORD`: Key-Passwort
+
+Wenn diese nicht gesetzt sind, wird automatisch Debug-Signierung verwendet.
+
+**Für lokale Entwicklung mit eigenem Keystore:**
 
 Erstelle `keystore.properties` (NICHT committen!):
 ```properties
@@ -226,6 +243,13 @@ Für Updates:
 - Kein Play Store Update nötig!
 
 ## 🆘 Troubleshooting
+
+**"App wurde nicht installiert" Fehler:**
+- ✅ **Gelöst ab v1.0.4**: APKs verwenden automatisch Debug-Signatur wenn kein Keystore vorhanden
+- Stelle sicher, dass "Installation aus unbekannten Quellen" in den Android-Einstellungen aktiviert ist
+- Deinstalliere vorherige Versionen der App komplett vor der Installation
+- Prüfe, ob genug Speicherplatz vorhanden ist
+- Bei älteren APK-Versionen (< v1.0.4): APK war unsigniert und konnte nicht installiert werden
 
 **Build scheitert:**
 - `./gradlew clean` ausführen

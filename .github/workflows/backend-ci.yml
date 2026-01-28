@@ -54,3 +54,41 @@ jobs:
           echo "❌ Server health check failed"
           exit 1
         fi
+    
+    - name: Test release packaging
+      run: |
+        echo "Testing release package creation..."
+        mkdir -p test-release-backend
+        cp -r server public package.json package-lock.json .env.example test-release-backend/
+        cd test-release-backend
+        tar -czf ../euaitalk-backend-test.tar.gz .
+        cd ..
+        
+        # Verify the tarball was created and contains expected files
+        if [ -f euaitalk-backend-test.tar.gz ]; then
+          echo "✅ Release tarball created"
+          
+          # Verify critical files are present in the tarball
+          echo "Verifying tarball contents..."
+          TARBALL_CONTENTS=$(tar -tzf euaitalk-backend-test.tar.gz)
+          
+          if echo "$TARBALL_CONTENTS" | grep -q "./server/" && \
+             echo "$TARBALL_CONTENTS" | grep -q "./package.json" && \
+             echo "$TARBALL_CONTENTS" | grep -q "./public/"; then
+            echo "✅ All critical files present in tarball"
+          else
+            echo "❌ Missing critical files in tarball"
+            echo "Tarball contents:"
+            echo "$TARBALL_CONTENTS" | head -20
+            rm -rf test-release-backend euaitalk-backend-test.tar.gz
+            exit 1
+          fi
+          
+          echo "✅ Release packaging test passed"
+        else
+          echo "❌ Failed to create release tarball"
+          exit 1
+        fi
+        
+        # Cleanup test artifacts
+        rm -rf test-release-backend euaitalk-backend-test.tar.gz

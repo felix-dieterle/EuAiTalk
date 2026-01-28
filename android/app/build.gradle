@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace 'com.euaitalk'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.euaitalk"
         minSdk 24
-        targetSdk 34
-        versionCode 10001
-        versionName "1.0.1"
+        targetSdk 35
+        versionCode 10002
+        versionName "1.0.2"
         
         // Server URL configuration for different build variants
         buildConfigField "String", "SERVER_URL", "\"http://10.0.2.2:3000\""
@@ -78,8 +78,8 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
-    implementation 'androidx.webkit:webkit:1.8.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
 }

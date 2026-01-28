@@ -28,6 +28,9 @@ npm-debug.log*
 dist/
 build/
 
+# Tools
+actionlint
+
 # Android
 android/.gradle/
 android/build/

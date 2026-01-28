@@ -21,7 +21,7 @@ Wir haben uns für einen **WebView Wrapper Ansatz** entschieden statt eines sepa
 
 ### 🔧 Technische Details:
 
-- **Android SDK**: API 24+ (Android 7.0+, ~95% Geräteabdeckung)
+- **Android SDK**: API 24-35 (Android 7.0 - Android 15, ~95% Geräteabdeckung)
 - **WebView**: AndroidX WebKit für beste Kompatibilität
 - **Kotlin**: Moderne, sichere Android-Entwicklung
 - **Berechtigungen**: Mikrofon, Internet, Audio-Einstellungen

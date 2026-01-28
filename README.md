@@ -139,7 +139,7 @@ Siehe [SETUP.md](SETUP.md) für:
 **Android:**
 - Kotlin
 - WebView (AndroidX WebKit)
-- Android SDK 24+ (Android 7.0+)
+- Android SDK 24-35 (Android 7.0 - Android 15)
 
 **APIs:**
 - Scaleway STT (Whisper large-v3)

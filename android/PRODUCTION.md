@@ -93,10 +93,13 @@ android:roundIcon="@mipmap/ic_launcher_round"
 
 ### 4. Keystore erstellen (für Signierung)
 
-**Hinweis:** Seit v1.0.4 ist ein Keystore **optional** für Entwicklung/Testing. 
-Die App verwendet automatisch Debug-Signierung als Fallback, sodass APKs immer installierbar sind.
+**⚠️ Wichtig für öffentliche Verteilung:** 
 
-**Für Produktion (Play Store)** ist ein Release-Keystore erforderlich:
+Für **lokale Entwicklung/Testing** ist kein Keystore erforderlich - die App verwendet automatisch Debug-Signierung.
+
+Für **öffentliche Verteilung** (GitHub Releases, Play Store) ist ein Release-Keystore **zwingend erforderlich**. Debug-signierte APKs sind ein Sicherheitsrisiko und sollten niemals öffentlich verteilt werden, da die Debug-Signatur bei allen Entwicklern identisch ist.
+
+**Für Produktion (Play Store) - Release-Keystore erstellen:**
 
 ```bash
 keytool -genkey -v -keystore euaitalk-release.keystore \
@@ -108,13 +111,13 @@ keytool -genkey -v -keystore euaitalk-release.keystore \
 
 **Für CI/CD (GitHub Actions):**
 
-Die Build-Konfiguration in `app/build.gradle` unterstützt bereits Umgebungsvariablen:
+Die Build-Konfiguration in `app/build.gradle` unterstützt bereits Umgebungsvariablen für automatisierte Builds:
 - `ANDROID_KEYSTORE_FILE`: Pfad zum Keystore
 - `ANDROID_KEYSTORE_PASSWORD`: Store-Passwort
 - `ANDROID_KEY_ALIAS`: Key-Alias
 - `ANDROID_KEY_PASSWORD`: Key-Passwort
 
-Wenn diese nicht gesetzt sind, wird automatisch Debug-Signierung verwendet.
+**Hinweis:** Wenn diese in CI/CD nicht gesetzt sind, verwendet die App Debug-Signierung als Fallback. Dies ist für öffentliche Releases nicht geeignet! Konfiguriere in GitHub Secrets einen Release-Keystore für produktive Releases.
 
 **Für lokale Entwicklung mit eigenem Keystore:**
 
@@ -245,10 +248,17 @@ Für Updates:
 ## 🆘 Troubleshooting
 
 **"App wurde nicht installiert" Fehler:**
+
+**Für lokale Entwicklung:**
 - ✅ **Gelöst ab v1.0.4**: APKs verwenden automatisch Debug-Signatur wenn kein Keystore vorhanden
 - Stelle sicher, dass "Installation aus unbekannten Quellen" in den Android-Einstellungen aktiviert ist
 - Deinstalliere vorherige Versionen der App komplett vor der Installation
 - Prüfe, ob genug Speicherplatz vorhanden ist
+
+**Für öffentliche Releases (GitHub Releases, Play Store):**
+- ⚠️ **Sicherheitsrisiko**: Debug-signierte APKs sollten NICHT öffentlich verteilt werden
+- **Lösung**: Konfiguriere einen Release-Keystore in GitHub Secrets oder lokal
+- Für Play Store ist ein Release-Keystore zwingend erforderlich
 - Bei älteren APK-Versionen (< v1.0.4): APK war unsigniert und konnte nicht installiert werden
 
 **Build scheitert:**

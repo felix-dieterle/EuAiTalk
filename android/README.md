@@ -158,10 +158,13 @@ Die App verwendet automatisch die richtige Signierung:
 - **Mit Keystore** (Produktions-Release): Verwendet deine Release-Signatur
 - **Ohne Keystore** (Entwicklung/Testing): Verwendet Debug-Signatur als Fallback
 
-Dies bedeutet, dass APKs aus GitHub Releases **immer installierbar** sind, auch ohne konfigurierten Keystore.
+**⚠️ Sicherheitshinweis:** Debug-signierte APKs sollten **NIEMALS** öffentlich verteilt oder im Play Store veröffentlicht werden! Sie sind nur für lokale Entwicklung und Tests gedacht.
+
+Für öffentliche Releases (GitHub Releases, Play Store) **muss** ein Release-Keystore konfiguriert werden. Siehe PRODUCTION.md für Details.
 
 **Fehlerbehebung "App wurde nicht installiert":**
-- ✅ **Gelöst ab v1.0.4**: Release-APKs verwenden automatisch Debug-Signatur wenn kein Keystore vorhanden ist
+- Für **lokale Entwicklung**: Debug-Signatur wird automatisch verwendet (seit v1.0.4)
+- Für **öffentliche Verteilung**: Konfiguriere einen Release-Keystore (siehe unten)
 - Stelle sicher, dass "Installation aus unbekannten Quellen" aktiviert ist
 - Deinstalliere alte Versionen der App vor einer neuen Installation
 

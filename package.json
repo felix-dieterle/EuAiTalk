@@ -1,6 +1,6 @@
 {
   "name": "euaitalk",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Simple audio conversation app with EU-based AI",
   "main": "server/index.js",
   "scripts": {

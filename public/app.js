@@ -46,7 +46,7 @@ async function init() {
     clearButton.addEventListener('click', clearChat);
     settingsButton.addEventListener('click', openSettings);
     closeSettingsButton.addEventListener('click', closeSettings);
-    saveSettingsButton.addEventListener('click', saveSettings);
+    saveSettingsButton.addEventListener('click', saveSettingsFromModal);
     resetSettingsButton.addEventListener('click', resetSettings);
     
     // Close modal when clicking outside
@@ -402,7 +402,7 @@ function closeSettings() {
 /**
  * Save settings from modal
  */
-function saveSettings() {
+function saveSettingsFromModal() {
     settings.ttsSpeed = parseFloat(document.getElementById('ttsSpeed').value);
     settings.ttsPitch = parseFloat(document.getElementById('ttsPitch').value);
     settings.defaultPersona = document.getElementById('defaultPersona').value;

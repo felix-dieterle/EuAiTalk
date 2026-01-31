@@ -35,6 +35,15 @@ jobs:
     - name: Check server syntax
       run: node --check server/index.js
     
+    - name: Setup test environment
+      run: |
+        cat > .env << 'EOF'
+        SCALEWAY_API_KEY=test_ci_key_for_health_check_only
+        SCALEWAY_STT_ENDPOINT=https://api.scaleway.ai/v1/audio/transcriptions
+        SCALEWAY_CHAT_ENDPOINT=https://api.scaleway.ai/v1/chat/completions
+        PORT=3000
+        EOF
+    
     - name: Test server startup
       run: |
         timeout 10 npm start &

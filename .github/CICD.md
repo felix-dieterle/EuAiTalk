@@ -21,16 +21,21 @@ The project uses GitHub Actions to automate testing, building, and releasing of 
 2. **Update Files**: Updates `package.json` and Android `build.gradle` with new version
 3. **Create Tag**: Creates and pushes a git tag (e.g., `v1.0.1`)
 4. **Generate Changelog**: Extracts commits since last release
-5. **Create Release**: Creates GitHub release with changelog
-6. **Build Backend**: Packages backend as tarball
-7. **Build Android**: Compiles release APK
-8. **Upload Assets**: Attaches all build artifacts to release
+5. **Create Draft Release**: Creates GitHub release as draft with changelog
+6. **Build Backend** (parallel): Packages backend as tarball and uploads to release
+7. **Build Android** (parallel): Compiles release APK and uploads to release
+8. **Publish Release**: Automatically publishes release after all artifacts are uploaded
 
 **Output:**
-- GitHub Release with version tag
+- GitHub Release with version tag (published only after all builds complete)
 - Backend package: `euaitalk-backend-{VERSION}.tar.gz`
 - Android APK: `EuAiTalk-{VERSION}.apk` (signed if keystore is configured, unsigned otherwise)
 - Automated changelog from commits
+
+**Important Note:**
+- Release is created as **draft** initially
+- Release is automatically **published** only after both backend and Android artifacts are uploaded (~4 minutes)
+- This ensures users never see incomplete releases with missing APK files
 
 **APK Signing:**
 - The workflow supports automatic APK signing via GitHub Secrets
@@ -187,8 +192,11 @@ The new release workflow automatically creates releases when changes are merged 
    - Automatically bump the patch version (e.g., 1.0.0 → 1.0.1)
    - Create a git tag (e.g., v1.0.1)
    - Generate a changelog from commits
-   - Build and publish both backend and Android releases
-   - Create a GitHub release with all artifacts
+   - Create a **draft release** on GitHub
+   - Build backend and Android in parallel (~4 minutes)
+   - Upload both artifacts to the release
+   - Automatically **publish** the release once all artifacts are uploaded
+4. The release will appear in the Releases page only when complete with all artifacts
 
 **Manual Release with Custom Version:**
 
@@ -303,6 +311,10 @@ git push origin v1.0.0
 
 ### Android Release Fails
 
+**Problem**: APK missing from release (only backend tarball visible)
+- **Solution**: Wait for the full workflow to complete (~4 minutes)
+- **Explanation**: The release is created as a draft first. Both backend and Android build in parallel. The release is only published when both artifacts are uploaded. Check the Actions tab to see if builds are still running.
+
 **Problem**: APK not found after build
 - **Solution**: Check build output path in logs
 - **Possible fix**: APK might have different name than expected
@@ -350,5 +362,5 @@ For questions or issues with CI/CD:
 
 ---
 
-**Last Updated**: 2026-01-27
-**Version**: 2.0
+**Last Updated**: 2026-01-31
+**Version**: 2.1

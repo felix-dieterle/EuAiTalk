@@ -12,6 +12,7 @@
         <header>
             <h1>🎙️ 4You EuAiTalk</h1>
             <p class="subtitle">Unterhalte dich per Sprache mit der KI</p>
+            <button id="settingsButton" class="settings-button" title="Einstellungen">⚙️</button>
         </header>
 
         <!-- Persona Selection -->
@@ -49,6 +50,58 @@
         <!-- API Status -->
         <div class="api-status" id="apiStatus">
             <small>API-Status wird geladen...</small>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Einstellungen</h2>
+                <button id="closeSettings" class="close-button">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- TTS Speed -->
+                <div class="setting-group">
+                    <label for="ttsSpeed">Sprachgeschwindigkeit:</label>
+                    <div class="slider-container">
+                        <input type="range" id="ttsSpeed" min="0.5" max="2" step="0.1" value="1">
+                        <span id="ttsSpeedValue">1.0x</span>
+                    </div>
+                </div>
+
+                <!-- TTS Pitch -->
+                <div class="setting-group">
+                    <label for="ttsPitch">Tonhöhe:</label>
+                    <div class="slider-container">
+                        <input type="range" id="ttsPitch" min="0.5" max="2" step="0.1" value="1">
+                        <span id="ttsPitchValue">1.0</span>
+                    </div>
+                </div>
+
+                <!-- Default Persona -->
+                <div class="setting-group">
+                    <label for="defaultPersona">Standard-Persona:</label>
+                    <select id="defaultPersona">
+                        <option value="general">Allgemeiner Assistent</option>
+                        <option value="storyteller">Geschichtenerzähler</option>
+                        <option value="comedian">Comedian</option>
+                        <option value="bible">Bibel-Geschichten</option>
+                    </select>
+                </div>
+
+                <!-- Auto-play TTS -->
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="autoPlayTTS" checked>
+                        Antwort automatisch vorlesen
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="resetSettings" class="secondary-button">Zurücksetzen</button>
+                <button id="saveSettings" class="primary-button">Speichern</button>
+            </div>
         </div>
     </div>
 

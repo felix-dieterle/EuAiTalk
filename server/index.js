@@ -14,6 +14,57 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+/**
+ * Required environment variables
+ * These must be set for the app to function properly
+ */
+const REQUIRED_ENV_VARS = [
+  'SCALEWAY_API_KEY',
+  'SCALEWAY_STT_ENDPOINT',
+  'SCALEWAY_CHAT_ENDPOINT'
+];
+
+/**
+ * Validates that all required environment variables are set
+ * @throws {Error} If any required environment variable is missing or has a placeholder value
+ */
+function validateRequiredSettings() {
+  const missing = [];
+  const placeholder = [];
+  
+  for (const varName of REQUIRED_ENV_VARS) {
+    const value = process.env[varName];
+    
+    if (!value) {
+      missing.push(varName);
+    } else if (value.includes('your_') || value.includes('_here')) {
+      placeholder.push(varName);
+    }
+  }
+  
+  if (missing.length > 0 || placeholder.length > 0) {
+    let errorMessage = '❌ Required environment variables are not properly configured:\n';
+    
+    if (missing.length > 0) {
+      errorMessage += `\nMissing variables:\n${missing.map(v => `  - ${v}`).join('\n')}\n`;
+    }
+    
+    if (placeholder.length > 0) {
+      errorMessage += `\nPlaceholder values detected (need real values):\n${placeholder.map(v => `  - ${v}`).join('\n')}\n`;
+    }
+    
+    errorMessage += '\n📝 Please copy .env.example to .env and configure all required variables.';
+    errorMessage += '\n💡 Get your Scaleway API key from: https://console.scaleway.com/project/credentials';
+    
+    throw new Error(errorMessage);
+  }
+  
+  console.log('✅ All required environment variables are configured');
+}
+
+// Validate required settings on startup
+validateRequiredSettings();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -41,9 +92,10 @@ app.use('/api/', apiLimiter);
 
 /**
  * Helper function to check if API is configured
+ * With required settings validation, this will always return true
  */
 function isApiConfigured() {
-  return !!(process.env.SCALEWAY_API_KEY && process.env.SCALEWAY_API_KEY !== 'your_scaleway_api_key_here');
+  return true;
 }
 
 /**
@@ -56,14 +108,6 @@ app.post('/api/transcribe', async (req, res) => {
     
     if (!audio) {
       return res.status(400).json({ error: 'Audio data is required' });
-    }
-
-    // For demo purposes, if no API key is set, return mock response
-    if (!isApiConfigured()) {
-      console.log('Demo mode: No API key configured, returning mock transcription');
-      return res.json({ 
-        text: 'Dies ist eine Demo-Transkription. Bitte konfigurieren Sie Ihren Scaleway API-Schlüssel in der .env-Datei.'
-      });
     }
 
     // Call Scaleway STT API
@@ -102,15 +146,6 @@ app.post('/api/chat', async (req, res) => {
     
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Messages array is required' });
-    }
-
-    // For demo purposes, if no API key is set, return mock response
-    if (!isApiConfigured()) {
-      console.log('Demo mode: No API key configured, returning mock chat response');
-      const userMessage = messages[messages.length - 1]?.content || '';
-      return res.json({ 
-        message: `Demo-Antwort auf: "${userMessage}". Bitte konfigurieren Sie Ihren Scaleway API-Schlüssel für echte KI-Antworten.`
-      });
     }
 
     // Add system message based on selected persona

@@ -14,9 +14,11 @@ cd EuAiTalk
 # Dependencies installieren
 npm install
 
-# Umgebungsvariablen konfigurieren
+# Umgebungsvariablen konfigurieren (ERFORDERLICH)
 cp .env.example .env
 # Bearbeite .env und füge deinen Scaleway API-Schlüssel hinzu
+# WICHTIG: SCALEWAY_API_KEY, SCALEWAY_STT_ENDPOINT und SCALEWAY_CHAT_ENDPOINT 
+# sind erforderlich - die App startet nicht ohne diese Werte!
 
 # Server starten
 npm start
@@ -25,7 +27,7 @@ npm start
 http://localhost:3000
 ```
 
-**Demo-Modus:** Die App funktioniert auch ohne API-Schlüssel für Tests!
+**⚠️ Wichtig:** Die App erfordert nun gültige Scaleway API-Zugangsdaten. Hole deinen API-Schlüssel von [Scaleway Console](https://console.scaleway.com/project/credentials).
 
 ---
 
@@ -156,7 +158,7 @@ Siehe [SETUP.md](SETUP.md) für:
 - 🔊 Automatische Sprachausgabe
 - 📱 Responsive Design (Mobile & Desktop)
 - 🤖 **Native Android App** (WebView Wrapper)
-- 🧪 Demo-Modus ohne API-Schlüssel
+- 🔒 Erforderliche API-Konfiguration für Sicherheit
 - 🚀 Produktionsreif mit Rate-Limiting
 
 ---

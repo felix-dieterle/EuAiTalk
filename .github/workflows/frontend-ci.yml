@@ -50,6 +50,14 @@ jobs:
         # Install dependencies and start server
         npm install
         
+        # Setup test environment
+        cat > .env << 'EOF'
+        SCALEWAY_API_KEY=test_ci_key_for_health_check_only
+        SCALEWAY_STT_ENDPOINT=https://api.scaleway.ai/v1/audio/transcriptions
+        SCALEWAY_CHAT_ENDPOINT=https://api.scaleway.ai/v1/chat/completions
+        PORT=3000
+        EOF
+        
         # Start server in background and save PID
         npm start &
         SERVER_PID=$!

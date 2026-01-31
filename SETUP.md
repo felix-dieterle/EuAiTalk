@@ -150,13 +150,20 @@ async function processAudio(audioBlob) {
 
 ## 🔧 Entwicklung
 
-### Demo-Modus
+### Erforderliche Konfiguration
 
-Die App funktioniert auch **ohne API-Schlüssel** im Demo-Modus:
+Die App erfordert **gültige API-Zugangsdaten** für den Betrieb:
 
-- Transkription: Gibt Dummy-Text zurück
-- Chat: Gibt Echo-Antwort zurück
-- Ideal zum Testen der UI!
+- **SCALEWAY_API_KEY**: Dein Scaleway API-Schlüssel (erforderlich)
+- **SCALEWAY_STT_ENDPOINT**: Speech-to-Text Endpoint (erforderlich)
+- **SCALEWAY_CHAT_ENDPOINT**: Chat Completion Endpoint (erforderlich)
+
+Die App validiert diese Einstellungen beim Start und startet nicht ohne gültige Werte.
+
+**API-Schlüssel erhalten:**
+1. Besuche [Scaleway Console](https://console.scaleway.com/project/credentials)
+2. Erstelle einen neuen API-Schlüssel
+3. Kopiere den Schlüssel in deine `.env` Datei
 
 ### Häufige Entwicklungsaufgaben
 

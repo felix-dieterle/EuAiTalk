@@ -216,9 +216,11 @@ Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integra
   - Version Bump (Patch standardmäßig)
   - Git Tag erstellen
   - Changelog generieren
-  - Backend & Android bauen
-  - GitHub Release mit allen Artefakten
+  - Backend & Android parallel bauen (~4 Minuten)
+  - GitHub Release wird als Draft erstellt
+  - Nach erfolgreichen Builds: Release automatisch veröffentlicht
 - **Workflow:** `.github/workflows/release.yml`
+- **Hinweis:** Release bleibt als Draft bis alle Artefakte hochgeladen sind
 
 ### Backend CI
 - **Trigger:** Pull Requests und Pushes auf `main` / `develop`

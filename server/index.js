@@ -32,12 +32,17 @@ function validateRequiredSettings() {
   const missing = [];
   const placeholder = [];
   
+  // Known placeholder values from .env.example
+  const PLACEHOLDER_VALUES = {
+    'SCALEWAY_API_KEY': 'your_scaleway_api_key_here'
+  };
+  
   for (const varName of REQUIRED_ENV_VARS) {
     const value = process.env[varName];
     
     if (!value) {
       missing.push(varName);
-    } else if (value.includes('your_') || value.includes('_here')) {
+    } else if (PLACEHOLDER_VALUES[varName] && value === PLACEHOLDER_VALUES[varName]) {
       placeholder.push(varName);
     }
   }
@@ -89,14 +94,6 @@ const staticLimiter = rateLimit({
 
 // Apply rate limiting to API routes
 app.use('/api/', apiLimiter);
-
-/**
- * Helper function to check if API is configured
- * With required settings validation, this will always return true
- */
-function isApiConfigured() {
-  return true;
-}
 
 /**
  * Speech-to-Text Endpoint
@@ -197,7 +194,7 @@ app.post('/api/chat', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    apiConfigured: isApiConfigured()
+    apiConfigured: true
   });
 });
 
@@ -208,5 +205,5 @@ app.get('*', staticLimiter, (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 EuAiTalk server running on http://localhost:${PORT}`);
-  console.log(`📝 API configured: ${isApiConfigured()}`);
+  console.log(`📝 API configured: true`);
 });

@@ -3,11 +3,20 @@
  * Handles audio recording, transcription, chat, and text-to-speech
  */
 
+// Default settings
+const DEFAULT_SETTINGS = {
+    ttsSpeed: 1.0,
+    ttsPitch: 1.0,
+    defaultPersona: 'general',
+    autoPlayTTS: true
+};
+
 // State management
 let mediaRecorder = null;
 let audioChunks = [];
 let conversationHistory = [];
 let isRecording = false;
+let settings = { ...DEFAULT_SETTINGS };
 
 // DOM elements
 const recordButton = document.getElementById('recordButton');
@@ -16,17 +25,39 @@ const chatContainer = document.getElementById('chatContainer');
 const statusDiv = document.getElementById('status');
 const personaSelect = document.getElementById('persona');
 const apiStatusDiv = document.getElementById('apiStatus');
+const settingsButton = document.getElementById('settingsButton');
+const settingsModal = document.getElementById('settingsModal');
+const closeSettingsButton = document.getElementById('closeSettings');
+const saveSettingsButton = document.getElementById('saveSettings');
+const resetSettingsButton = document.getElementById('resetSettings');
 
 /**
  * Initialize the app
  */
 async function init() {
+    // Load settings from localStorage
+    loadSettings();
+    
     // Check API status
     checkApiStatus();
     
     // Set up event listeners
     recordButton.addEventListener('click', toggleRecording);
     clearButton.addEventListener('click', clearChat);
+    settingsButton.addEventListener('click', openSettings);
+    closeSettingsButton.addEventListener('click', closeSettings);
+    saveSettingsButton.addEventListener('click', saveSettingsFromModal);
+    resetSettingsButton.addEventListener('click', resetSettings);
+    
+    // Close modal when clicking outside
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            closeSettings();
+        }
+    });
+    
+    // Set up settings sliders
+    setupSettingsSliders();
     
     // Request microphone permission
     try {
@@ -146,9 +177,11 @@ async function processAudio(audioBlob) {
             // Add AI message to chat
             addMessage('ai', aiResponse);
             
-            // Step 3: Speak the response
-            updateStatus('🔊 Spreche Antwort...');
-            await speakText(aiResponse);
+            // Step 3: Speak the response (if enabled in settings)
+            if (settings.autoPlayTTS) {
+                updateStatus('🔊 Spreche Antwort...');
+                await speakText(aiResponse);
+            }
             
             updateStatus('Bereit');
         };
@@ -239,8 +272,8 @@ function speakText(text) {
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'de-DE';
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
+        utterance.rate = settings.ttsSpeed;
+        utterance.pitch = settings.ttsPitch;
         
         utterance.onend = () => {
             resolve();
@@ -307,6 +340,130 @@ function clearChat() {
         `;
         updateStatus('Chat gelöscht');
     }
+}
+
+/**
+ * Settings Management
+ */
+
+/**
+ * Load settings from localStorage
+ */
+function loadSettings() {
+    const savedSettings = localStorage.getItem('euaitalk-settings');
+    if (savedSettings) {
+        try {
+            settings = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+            settings = { ...DEFAULT_SETTINGS };
+        }
+    }
+    
+    // Apply loaded settings to persona selector
+    if (settings.defaultPersona) {
+        personaSelect.value = settings.defaultPersona;
+    }
+}
+
+/**
+ * Save settings to localStorage
+ */
+function saveSettingsToStorage() {
+    try {
+        localStorage.setItem('euaitalk-settings', JSON.stringify(settings));
+    } catch (error) {
+        console.error('Failed to save settings:', error);
+    }
+}
+
+/**
+ * Open settings modal
+ */
+function openSettings() {
+    // Populate current settings
+    document.getElementById('ttsSpeed').value = settings.ttsSpeed;
+    document.getElementById('ttsSpeedValue').textContent = `${settings.ttsSpeed.toFixed(1)}x`;
+    document.getElementById('ttsPitch').value = settings.ttsPitch;
+    document.getElementById('ttsPitchValue').textContent = settings.ttsPitch.toFixed(1);
+    document.getElementById('defaultPersona').value = settings.defaultPersona;
+    document.getElementById('autoPlayTTS').checked = settings.autoPlayTTS;
+    
+    settingsModal.classList.add('show');
+}
+
+/**
+ * Close settings modal
+ */
+function closeSettings() {
+    settingsModal.classList.remove('show');
+}
+
+/**
+ * Save settings from modal
+ */
+function saveSettingsFromModal() {
+    settings.ttsSpeed = parseFloat(document.getElementById('ttsSpeed').value);
+    settings.ttsPitch = parseFloat(document.getElementById('ttsPitch').value);
+    settings.defaultPersona = document.getElementById('defaultPersona').value;
+    settings.autoPlayTTS = document.getElementById('autoPlayTTS').checked;
+    
+    // Update persona selector
+    personaSelect.value = settings.defaultPersona;
+    
+    // Save to localStorage
+    saveSettingsToStorage();
+    
+    // Close modal
+    closeSettings();
+    
+    // Show feedback
+    updateStatus('✅ Einstellungen gespeichert');
+    setTimeout(() => updateStatus('Bereit'), 2000);
+}
+
+/**
+ * Reset settings to defaults
+ */
+function resetSettings() {
+    if (confirm('Einstellungen auf Standardwerte zurücksetzen?')) {
+        settings = { ...DEFAULT_SETTINGS };
+        
+        // Update UI
+        document.getElementById('ttsSpeed').value = settings.ttsSpeed;
+        document.getElementById('ttsSpeedValue').textContent = `${settings.ttsSpeed.toFixed(1)}x`;
+        document.getElementById('ttsPitch').value = settings.ttsPitch;
+        document.getElementById('ttsPitchValue').textContent = settings.ttsPitch.toFixed(1);
+        document.getElementById('defaultPersona').value = settings.defaultPersona;
+        document.getElementById('autoPlayTTS').checked = settings.autoPlayTTS;
+        
+        // Update persona selector
+        personaSelect.value = settings.defaultPersona;
+        
+        // Save to localStorage
+        saveSettingsToStorage();
+        
+        updateStatus('✅ Einstellungen zurückgesetzt');
+        setTimeout(() => updateStatus('Bereit'), 2000);
+    }
+}
+
+/**
+ * Set up settings sliders with real-time value updates
+ */
+function setupSettingsSliders() {
+    const ttsSpeedSlider = document.getElementById('ttsSpeed');
+    const ttsSpeedValue = document.getElementById('ttsSpeedValue');
+    const ttsPitchSlider = document.getElementById('ttsPitch');
+    const ttsPitchValue = document.getElementById('ttsPitchValue');
+    
+    ttsSpeedSlider.addEventListener('input', (e) => {
+        ttsSpeedValue.textContent = `${parseFloat(e.target.value).toFixed(1)}x`;
+    });
+    
+    ttsPitchSlider.addEventListener('input', (e) => {
+        ttsPitchValue.textContent = parseFloat(e.target.value).toFixed(1);
+    });
 }
 
 // Initialize app when DOM is ready

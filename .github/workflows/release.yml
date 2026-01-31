@@ -191,7 +191,7 @@ jobs:
           
           ### 📦 Assets
           
-          Backend and Android artifacts will be uploaded shortly by the build jobs.
+          Backend and Android artifacts are being built and will be available shortly.
           
           ### 🚀 Installation
           
@@ -214,7 +214,7 @@ jobs:
           Download the APK below and install it on your Android device.
           
           > **Note**: The APK may be signed or unsigned depending on the repository configuration. Unsigned APKs require enabling "Install from unknown sources" on your device.
-        draft: false
+        draft: true
         prerelease: false
 
   build-backend:
@@ -336,3 +336,17 @@ jobs:
         tag_name: ${{ needs.create-release.outputs.tag }}
         files: |
           EuAiTalk-${{ needs.create-release.outputs.version }}.apk
+
+  publish-release:
+    needs: [create-release, build-backend, build-android]
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Publish Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.create-release.outputs.tag }}
+        draft: false

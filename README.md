@@ -112,6 +112,46 @@ Siehe [SETUP.md](SETUP.md) für:
 - Debugging-Tipps
 - Erweiterungsmöglichkeiten
 
+Siehe [TESTING.md](TESTING.md) für:
+- **Vollständige Test-Dokumentation**
+- **60 automatisierte Tests** (Backend, Frontend, Android)
+- **89% Backend Coverage**
+- Test-Strukturen und Best Practices
+- CI/CD Test-Integration
+
+---
+
+## 🧪 Testing
+
+Das Projekt verfügt über **vollständige kritische Testabdeckung**:
+
+- ✅ **60 automatisierte Tests** über alle Komponenten
+- ✅ **Backend**: 25 Tests (89% Coverage)
+  - API Endpoints (Transcription, Chat, Health)
+  - Environment Validation
+  - Rate Limiting & Security
+- ✅ **Frontend**: 24 Tests
+  - Settings Management
+  - UI State & Message Handling
+  - Error Handling
+- ✅ **Android**: 11 Tests
+  - Build Configuration
+  - Permission Handling
+
+**Tests ausführen:**
+```bash
+# Alle Tests
+npm test
+
+# Tests mit Coverage-Report
+npm run test:coverage
+
+# Android Tests
+cd android && gradle test
+```
+
+**Vollständige Dokumentation**: [TESTING.md](TESTING.md)
+
 ---
 
 ## 🔒 Sicherheit
@@ -225,13 +265,21 @@ Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integra
 ### Backend CI
 - **Trigger:** Pull Requests und Pushes auf `main` / `develop`
 - **Tests:**
+  - **Unit Tests** (25 Tests, 89% Coverage)
+  - **API Integration Tests** (Transcription, Chat, Health)
+  - **Environment Validation Tests**
   - Node.js Dependency Installation
   - Syntax-Validierung
   - Server Health Check
+  - Coverage Report Upload
 - **Workflow:** `.github/workflows/backend-ci.yml`
 
 ### Frontend CI
 - **Trigger:** Pull Requests und Pushes auf `main` / `develop` (bei Frontend-Änderungen)
+- **Tests:**
+  - **Unit Tests** (24 Tests für Settings & UI)
+  - **Settings Management Tests**
+  - **UI State Tests**
 - **Validierung:**
   - HTML Struktur-Check
   - JavaScript Syntax-Validierung
@@ -241,6 +289,9 @@ Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integra
 
 ### Android CI
 - **Trigger:** Pull Requests und Pushes auf `main` / `develop` (bei Android-Änderungen)
+- **Tests:**
+  - **Unit Tests** (11 Tests für Config & Permissions)
+  - Test Results Upload
 - **Build:**
   - Debug APK wird automatisch gebaut
   - Lint-Checks werden ausgeführt

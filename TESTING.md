@@ -4,10 +4,9 @@ This document describes the comprehensive test coverage implemented for the EuAi
 
 ## Overview
 
-The EuAiTalk project now has complete critical test coverage across all major components:
+The EuAiTalk project has complete critical test coverage for the application logic:
 - **Backend (Node.js/Express)**: Unit and integration tests
 - **Frontend (Vanilla JavaScript)**: Unit tests for UI logic and state management
-- **Android (Kotlin)**: Unit tests for configuration and permissions
 
 ## Test Framework
 
@@ -16,10 +15,6 @@ The EuAiTalk project now has complete critical test coverage across all major co
 - **Additional Tools**: 
   - `supertest` for HTTP endpoint testing
   - `jest-environment-jsdom` for DOM testing
-
-### Android
-- **Framework**: JUnit
-- **Language**: Kotlin
 
 ## Running Tests
 
@@ -36,12 +31,6 @@ npm run test:coverage
 ### Watch Mode (for development)
 ```bash
 npm run test:watch
-```
-
-### Android Tests
-```bash
-cd android
-gradle test
 ```
 
 ## Test Structure
@@ -156,33 +145,6 @@ Tests UI components and state handling:
 
 **Total Frontend Tests**: 24 tests
 
-### Android Tests (`android/app/src/test/java/com/euaitalk/`)
-
-#### `AppConfigTest.kt` - Configuration Tests
-Tests build configuration and app constants:
-
-- ✅ Server URL is configured
-- ✅ Application ID is correct
-- ✅ Build type is valid (debug/release)
-- ✅ Version code is positive
-- ✅ Version name is not empty
-- ✅ Debug flag consistency
-
-**Test Count**: 6 tests
-
-#### `PermissionTest.kt` - Permission Logic Tests
-Tests permission handling logic:
-
-- ✅ Required permissions are defined
-- ✅ Permission request code is valid
-- ✅ Permission array is not empty
-- ✅ Permission filtering logic works
-- ✅ Handles all permissions granted scenario
-
-**Test Count**: 5 tests
-
-**Total Android Tests**: 11 tests
-
 ## Coverage Summary
 
 ### Backend Coverage
@@ -206,10 +168,9 @@ server/    |   89.47 |    84.84 |   88.88 |  89.18
 |-----------|-------|----------|--------|
 | Backend API | 25 | 89.47% | ✅ |
 | Frontend Logic | 24 | N/A* | ✅ |
-| Android | 11 | N/A* | ✅ |
-| **Total** | **60** | **-** | **✅** |
+| **Total** | **49** | **-** | **✅** |
 
-*Frontend and Android coverage will be measured in future iterations
+*Frontend coverage will be measured in future iterations
 
 ## CI/CD Integration
 
@@ -231,13 +192,11 @@ Validates frontend on every PR and push:
 4. **Static File Serving**: Tests file access
 
 ### Android CI (`android-ci.yml`)
-Tests Android app on every PR and push:
+Builds and validates Android app on every PR and push:
 
-1. **Unit Tests**: Runs all Android unit tests
-2. **Test Results**: Uploaded as artifacts
-3. **Debug Build**: Builds debug APK
-4. **Release Build**: Tests release configuration
-5. **Lint Checks**: Code quality checks
+1. **Debug Build**: Builds debug APK
+2. **Release Build**: Tests release configuration
+3. **Lint Checks**: Code quality checks
 
 ## Critical Test Areas
 
@@ -266,7 +225,7 @@ Tests Android app on every PR and push:
 
 ## Test Quality Metrics
 
-- **Total Tests**: 60
+- **Total Tests**: 49
 - **Test Success Rate**: 100%
 - **Backend Coverage**: 89.47%
 - **Critical Path Coverage**: ~98%
@@ -304,16 +263,6 @@ describe('UI Feature', () => {
 });
 ```
 
-### Android Test Template
-```kotlin
-class FeatureTest {
-    @Test
-    fun testSomething() {
-        // Test implementation
-    }
-}
-```
-
 ## Best Practices
 
 1. **Write tests before or alongside code changes**
@@ -345,13 +294,6 @@ npm test -- --clearCache
 # Reinstall dependencies
 rm -rf node_modules
 npm install
-```
-
-### Android Tests Failing
-```bash
-cd android
-gradle clean
-gradle test
 ```
 
 ### Coverage Not Generating

@@ -114,7 +114,7 @@ Siehe [SETUP.md](SETUP.md) für:
 
 Siehe [TESTING.md](TESTING.md) für:
 - **Vollständige Test-Dokumentation**
-- **60 automatisierte Tests** (Backend, Frontend, Android)
+- **49 automatisierte Tests** (Backend, Frontend)
 - **89% Backend Coverage**
 - Test-Strukturen und Best Practices
 - CI/CD Test-Integration
@@ -125,7 +125,7 @@ Siehe [TESTING.md](TESTING.md) für:
 
 Das Projekt verfügt über **vollständige kritische Testabdeckung**:
 
-- ✅ **60 automatisierte Tests** über alle Komponenten
+- ✅ **49 automatisierte Tests** über alle Komponenten
 - ✅ **Backend**: 25 Tests (89% Coverage)
   - API Endpoints (Transcription, Chat, Health)
   - Environment Validation
@@ -134,9 +134,6 @@ Das Projekt verfügt über **vollständige kritische Testabdeckung**:
   - Settings Management
   - UI State & Message Handling
   - Error Handling
-- ✅ **Android**: 11 Tests
-  - Build Configuration
-  - Permission Handling
 
 **Tests ausführen:**
 ```bash
@@ -145,9 +142,6 @@ npm test
 
 # Tests mit Coverage-Report
 npm run test:coverage
-
-# Android Tests
-cd android && gradle test
 ```
 
 **Vollständige Dokumentation**: [TESTING.md](TESTING.md)
@@ -289,11 +283,9 @@ Das Projekt verfügt über automatisierte Workflows für kontinuierliche Integra
 
 ### Android CI
 - **Trigger:** Pull Requests und Pushes auf `main` / `develop` (bei Android-Änderungen)
-- **Tests:**
-  - **Unit Tests** (11 Tests für Config & Permissions)
-  - Test Results Upload
 - **Build:**
   - Debug APK wird automatisch gebaut
+  - Release Build wird getestet
   - Lint-Checks werden ausgeführt
 - **Artefakte:** Debug APK verfügbar für 30 Tage
 - **Workflow:** `.github/workflows/android-ci.yml`

@@ -28,6 +28,10 @@ npm-debug.log*
 dist/
 build/
 
+# Test coverage
+coverage/
+.nyc_output/
+
 # Tools
 actionlint
 

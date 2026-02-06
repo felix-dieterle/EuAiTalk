@@ -46,11 +46,13 @@ Wir haben uns für einen **WebView Wrapper Ansatz** entschieden statt eines sepa
 Die Server-URL wird automatisch per Build-Variante konfiguriert:
 
 - **Debug Build**: `http://10.0.2.2:3000` (Android Emulator localhost)
-- **Release Build**: `https://your-production-server.com` (muss konfiguriert werden)
+- **Release Build**: `http://10.0.2.2:3000` (Standardmäßig für Entwicklung - **muss für Produktion geändert werden!**)
+
+> ⚠️ **Wichtig**: Stelle sicher, dass der Backend-Server läuft (`npm start` im Hauptverzeichnis), bevor du die App startest!
 
 **Für Entwicklung mit echtem Gerät** im selben Netzwerk:
 
-Bearbeite `app/build.gradle` und füge eine neue Build-Variante hinzu:
+Bearbeite `app/build.gradle` und ändere die Server-URL:
 
 ```gradle
 buildTypes {
@@ -59,6 +61,10 @@ buildTypes {
     }
 }
 ```
+
+Finde deine lokale IP mit:
+- **Windows**: `ipconfig` → IPv4-Adresse
+- **Mac/Linux**: `ifconfig` oder `ip addr` → inet Adresse
 
 **Für Produktion:**
 

@@ -18,6 +18,12 @@ let conversationHistory = [];
 let isRecording = false;
 let settings = { ...DEFAULT_SETTINGS };
 
+// Rate limit tracking
+let rateLimits = {
+    transcribe: { limit: 0, remaining: 0, reset: 0 },
+    chat: { limit: 0, remaining: 0, reset: 0 }
+};
+
 // DOM elements
 const recordButton = document.getElementById('recordButton');
 const clearButton = document.getElementById('clearButton');
@@ -203,6 +209,9 @@ async function transcribeAudio(base64Audio) {
             body: JSON.stringify({ audio: base64Audio })
         });
         
+        // Update rate limit info
+        updateRateLimitFromHeaders('transcribe', response.headers);
+        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(`Transcription failed (${response.status}): ${errorData.error || response.statusText}`);
@@ -236,6 +245,9 @@ async function getChatResponse(userMessage) {
                 persona: personaSelect.value
             })
         });
+        
+        // Update rate limit info
+        updateRateLimitFromHeaders('chat', response.headers);
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -464,6 +476,56 @@ function setupSettingsSliders() {
     ttsPitchSlider.addEventListener('input', (e) => {
         ttsPitchValue.textContent = parseFloat(e.target.value).toFixed(1);
     });
+}
+
+/**
+ * Update rate limit information from response headers
+ */
+function updateRateLimitFromHeaders(apiName, headers) {
+    const limit = headers.get('RateLimit-Limit');
+    const remaining = headers.get('RateLimit-Remaining');
+    const reset = headers.get('RateLimit-Reset');
+    
+    if (limit && remaining) {
+        rateLimits[apiName] = {
+            limit: parseInt(limit),
+            remaining: parseInt(remaining),
+            reset: reset ? parseInt(reset) : 0
+        };
+        updateRateLimitDisplay();
+    }
+}
+
+/**
+ * Update the rate limit indicators display
+ */
+function updateRateLimitDisplay() {
+    const container = document.getElementById('rateLimitIndicators');
+    if (!container) return;
+    
+    const html = Object.keys(rateLimits).map(apiName => {
+        const data = rateLimits[apiName];
+        if (data.limit === 0) return ''; // Skip if no data yet
+        
+        const usagePercent = ((data.limit - data.remaining) / data.limit) * 100;
+        let color = '#4caf50'; // Green
+        if (usagePercent >= 90) {
+            color = '#f44336'; // Red
+        } else if (usagePercent >= 70) {
+            color = '#ffc107'; // Yellow
+        }
+        
+        const apiLabel = apiName === 'transcribe' ? 'STT' : 'Chat';
+        
+        return `
+            <div class="rate-limit-indicator" title="${apiLabel}: ${data.remaining}/${data.limit} verfügbar">
+                <span class="rate-limit-dot" style="background-color: ${color};"></span>
+                <span class="rate-limit-label">${apiLabel}</span>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = html;
 }
 
 // Initialize app when DOM is ready

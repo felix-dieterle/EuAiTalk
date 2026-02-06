@@ -263,6 +263,36 @@ header h1 {
     color: #666;
 }
 
+/* Rate Limit Indicators */
+.rate-limit-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1.5rem;
+    background: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+}
+
+.rate-limit-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.rate-limit-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.rate-limit-label {
+    font-weight: 500;
+}
+
 /* Scrollbar styling */
 .chat-container::-webkit-scrollbar {
     width: 8px;

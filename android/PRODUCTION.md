@@ -6,7 +6,11 @@ Vor dem Deployment in den Google Play Store müssen folgende Schritte durchgefü
 
 ### 1. Server-URL setzen
 
-**Erforderlich!** Bearbeite `app/build.gradle`:
+**Erforderlich für Produktions-Deployment!** 
+
+Die Standard-Konfiguration verwendet `http://10.0.2.2:3000` für lokale Entwicklung. Für Produktion musst du dies ändern.
+
+Bearbeite `app/build.gradle`:
 
 ```gradle
 buildTypes {
@@ -35,6 +39,8 @@ buildTypes {
     }
 }
 ```
+
+> ⚠️ **Hinweis für Entwickler**: Die Standard-URL `http://10.0.2.2:3000` funktioniert für lokale Tests mit dem Android Emulator. Für echte Geräte oder Produktions-Deployment muss die URL angepasst werden!
 
 ### 2. Network Security Config anpassen
 

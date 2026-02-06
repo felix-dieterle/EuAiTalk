@@ -121,11 +121,47 @@ class MainActivity : AppCompatActivity() {
                 error: WebResourceError?
             ) {
                 super.onReceivedError(view, request, error)
-                Toast.makeText(
-                    this@MainActivity,
-                    "Fehler beim Laden: ${error?.description}",
-                    Toast.LENGTH_LONG
-                ).show()
+                
+                // Provide user-friendly error message with solution
+                val errorCode = error?.errorCode
+                val isMainFrameError = request?.isForMainFrame == true
+                
+                if (isMainFrameError) {
+                    val errorMessage = when (errorCode) {
+                        WebViewClient.ERROR_HOST_LOOKUP,
+                        WebViewClient.ERROR_CONNECT,
+                        WebViewClient.ERROR_TIMEOUT -> {
+                            if (BuildConfig.DEBUG) {
+                                "Server nicht erreichbar.\n\n" +
+                                "Bitte stellen Sie sicher, dass:\n" +
+                                "1. Der Backend-Server läuft (npm start)\n" +
+                                "2. Die Server-URL korrekt konfiguriert ist\n" +
+                                "3. Ihr Gerät mit dem Netzwerk verbunden ist\n\n" +
+                                "Siehe android/README.md für Konfigurationsanleitung."
+                            } else {
+                                "Server nicht erreichbar.\n\n" +
+                                "Bitte stellen Sie sicher, dass:\n" +
+                                "1. Der Backend-Server gestartet ist\n" +
+                                "2. Die Server-URL korrekt konfiguriert ist\n" +
+                                "3. Ihr Gerät mit dem Internet verbunden ist"
+                            }
+                        }
+                        else -> "Fehler beim Laden: ${error?.description}"
+                    }
+                    
+                    Toast.makeText(
+                        this@MainActivity,
+                        errorMessage,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    
+                    // Log for debugging (debug builds only to avoid exposing URL in production)
+                    if (BuildConfig.DEBUG) {
+                        android.util.Log.d("MainActivity", "Error loading $SERVER_URL: ${error?.description} (code: $errorCode)")
+                    } else {
+                        android.util.Log.e("MainActivity", "Error loading server: ${error?.description} (code: $errorCode)")
+                    }
+                }
             }
         }
         

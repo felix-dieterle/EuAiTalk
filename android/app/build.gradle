@@ -47,8 +47,14 @@ android {
             
             // ⚠️ WICHTIG: Setze deine Produktions-Server-URL hier!
             // Siehe android/PRODUCTION.md für sichere Konfigurationsmethoden
-            // TODO: Ersetze mit deiner echten Server-URL vor dem Release!
-            buildConfigField "String", "SERVER_URL", "\"https://your-production-server.com\""
+            // 
+            // ⚠️ SICHERHEITSWARNUNG: Die Standard-URL verwendet HTTP (nicht HTTPS)
+            // Dies ist NUR für lokale Entwicklung geeignet!
+            // Für Produktion MUSS eine HTTPS-URL konfiguriert werden!
+            // 
+            // Standard: localhost für Entwicklung (Backend muss auf dem Gerät/Emulator laufen)
+            // Für Produktion: Ersetze mit deiner echten HTTPS Server-URL!
+            buildConfigField "String", "SERVER_URL", "\"http://10.0.2.2:3000\""
             
             // APK Signing Configuration
             // Use release signing config if keystore is available, otherwise fallback to debug

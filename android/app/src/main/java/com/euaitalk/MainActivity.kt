@@ -136,7 +136,6 @@ class MainActivity : AppCompatActivity() {
                             "1. Der Backend-Server läuft (npm start)\n" +
                             "2. Die Server-URL korrekt konfiguriert ist\n" +
                             "3. Ihr Gerät mit dem Netzwerk verbunden ist\n\n" +
-                            "Aktuelle URL: $SERVER_URL\n\n" +
                             "Siehe android/README.md für Konfigurationsanleitung."
                         }
                         else -> "Fehler beim Laden: ${error?.description}"
@@ -148,8 +147,12 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_LONG
                     ).show()
                     
-                    // Log for debugging
-                    android.util.Log.e("MainActivity", "Error loading $SERVER_URL: ${error?.description} (code: $errorCode)")
+                    // Log for debugging (debug builds only to avoid exposing URL in production)
+                    if (BuildConfig.DEBUG) {
+                        android.util.Log.d("MainActivity", "Error loading $SERVER_URL: ${error?.description} (code: $errorCode)")
+                    } else {
+                        android.util.Log.e("MainActivity", "Error loading server: ${error?.description} (code: $errorCode)")
+                    }
                 }
             }
         }

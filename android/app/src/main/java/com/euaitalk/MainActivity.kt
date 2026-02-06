@@ -131,12 +131,20 @@ class MainActivity : AppCompatActivity() {
                         WebViewClient.ERROR_HOST_LOOKUP,
                         WebViewClient.ERROR_CONNECT,
                         WebViewClient.ERROR_TIMEOUT -> {
-                            "Server nicht erreichbar.\n\n" +
-                            "Bitte stellen Sie sicher, dass:\n" +
-                            "1. Der Backend-Server läuft (npm start)\n" +
-                            "2. Die Server-URL korrekt konfiguriert ist\n" +
-                            "3. Ihr Gerät mit dem Netzwerk verbunden ist\n\n" +
-                            "Siehe android/README.md für Konfigurationsanleitung."
+                            if (BuildConfig.DEBUG) {
+                                "Server nicht erreichbar.\n\n" +
+                                "Bitte stellen Sie sicher, dass:\n" +
+                                "1. Der Backend-Server läuft (npm start)\n" +
+                                "2. Die Server-URL korrekt konfiguriert ist\n" +
+                                "3. Ihr Gerät mit dem Netzwerk verbunden ist\n\n" +
+                                "Siehe android/README.md für Konfigurationsanleitung."
+                            } else {
+                                "Server nicht erreichbar.\n\n" +
+                                "Bitte stellen Sie sicher, dass:\n" +
+                                "1. Der Backend-Server gestartet ist\n" +
+                                "2. Die Server-URL korrekt konfiguriert ist\n" +
+                                "3. Ihr Gerät mit dem Internet verbunden ist"
+                            }
                         }
                         else -> "Fehler beim Laden: ${error?.description}"
                     }

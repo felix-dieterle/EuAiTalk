@@ -497,6 +497,25 @@ header h1 {
     cursor: pointer;
 }
 
+.setting-group input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-family: monospace;
+}
+
+.setting-group input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.setting-group input[type="text"]::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
 .modal-footer {
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-color);

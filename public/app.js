@@ -8,7 +8,8 @@ const DEFAULT_SETTINGS = {
     ttsSpeed: 1.0,
     ttsPitch: 1.0,
     defaultPersona: 'general',
-    autoPlayTTS: true
+    autoPlayTTS: true,
+    backendUrl: '' // Empty means same origin (default)
 };
 
 // State management
@@ -17,6 +18,8 @@ let audioChunks = [];
 let conversationHistory = [];
 let isRecording = false;
 let settings = { ...DEFAULT_SETTINGS };
+let isOnline = true;
+let backendAvailable = false;
 
 // Rate limit tracking
 let rateLimits = {
@@ -43,6 +46,9 @@ const resetSettingsButton = document.getElementById('resetSettings');
 async function init() {
     // Load settings from localStorage
     loadSettings();
+    
+    // Set up online/offline detection
+    setupOnlineDetection();
     
     // Check API status
     checkApiStatus();
@@ -77,20 +83,125 @@ async function init() {
 }
 
 /**
+ * Get the configured backend URL
+ */
+function getBackendUrl() {
+    return settings.backendUrl || window.location.origin;
+}
+
+/**
+ * Setup online/offline detection
+ */
+function setupOnlineDetection() {
+    // Initial state
+    isOnline = navigator.onLine;
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => {
+        isOnline = true;
+        updateStatus('✅ Wieder online - verbinde mit Server...');
+        checkApiStatus();
+    });
+    
+    window.addEventListener('offline', () => {
+        isOnline = false;
+        backendAvailable = false;
+        updateStatus('⚠️ Offline - Aufnahme nicht verfügbar', 'warning');
+        updateApiStatusDisplay();
+        recordButton.disabled = true;
+    });
+}
+
+/**
+ * Update API status display
+ */
+function updateApiStatusDisplay() {
+    if (!isOnline) {
+        apiStatusDiv.innerHTML = '<small>⚠️ Offline</small>';
+    } else if (!backendAvailable) {
+        apiStatusDiv.innerHTML = '<small>❌ Server nicht erreichbar</small>';
+    } else {
+        // Will be set by checkApiStatus
+    }
+}
+
+/**
  * Check if API is configured
  */
 async function checkApiStatus() {
+    if (!isOnline) {
+        backendAvailable = false;
+        updateApiStatusDisplay();
+        recordButton.disabled = true;
+        return;
+    }
+    
     try {
-        const response = await fetch('/api/health');
+        const backendUrl = getBackendUrl();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch(`${backendUrl}/api/health`, {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
+        
+        backendAvailable = true;
+        recordButton.disabled = false;
         
         if (data.apiConfigured) {
             apiStatusDiv.innerHTML = '<small>✅ API konfiguriert</small>';
         } else {
             apiStatusDiv.innerHTML = '<small>⚠️ Demo-Modus (API-Schlüssel nicht konfiguriert)</small>';
         }
+        
+        updateStatus('Bereit zum Aufnehmen');
     } catch (error) {
-        apiStatusDiv.innerHTML = '<small>❌ Server nicht erreichbar</small>';
+        backendAvailable = false;
+        recordButton.disabled = true;
+        
+        let errorMessage = 'Server nicht erreichbar';
+        if (error.name === 'AbortError') {
+            errorMessage += ' (Timeout)';
+        } else if (error.message) {
+            console.error('API health check error:', error);
+        }
+        
+        apiStatusDiv.innerHTML = `<small>❌ ${errorMessage}</small>`;
+        updateStatus('⚠️ Backend nicht verfügbar - Aufnahme deaktiviert', 'warning');
+        
+        // Show helpful message to user
+        showOfflineMessage();
+    }
+}
+
+/**
+ * Show offline/backend unavailable message
+ */
+function showOfflineMessage() {
+    // Only show if chat is empty or only has welcome message
+    const hasMessages = conversationHistory.length > 0;
+    if (!hasMessages) {
+        const welcomeMessage = chatContainer.querySelector('.welcome-message');
+        if (welcomeMessage) {
+            welcomeMessage.innerHTML = `
+                <p>⚠️ Backend nicht erreichbar</p>
+                <p>Der Server ist momentan nicht verfügbar.</p>
+                <p><small>Bitte überprüfen Sie:</small></p>
+                <ul style="text-align: left; margin: 10px auto; max-width: 300px;">
+                    <li>Backend-Server läuft</li>
+                    <li>Internetverbindung aktiv</li>
+                    <li>Backend-URL korrekt konfiguriert</li>
+                </ul>
+                <p><small>Sie können die Backend-URL in den Einstellungen ⚙️ konfigurieren.</small></p>
+            `;
+        }
     }
 }
 
@@ -98,6 +209,12 @@ async function checkApiStatus() {
  * Toggle recording on/off
  */
 async function toggleRecording() {
+    // Check if backend is available
+    if (!backendAvailable || !isOnline) {
+        updateStatus('❌ Backend nicht verfügbar - kann nicht aufnehmen', 'error');
+        return;
+    }
+    
     if (isRecording) {
         stopRecording();
     } else {
@@ -203,18 +320,34 @@ async function processAudio(audioBlob) {
  */
 async function transcribeAudio(base64Audio) {
     try {
-        const response = await fetch('/api/transcribe', {
+        const backendUrl = getBackendUrl();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const response = await fetch(`${backendUrl}/api/transcribe`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ audio: base64Audio })
+            body: JSON.stringify({ audio: base64Audio }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         // Update rate limit info
         updateRateLimitFromHeaders('transcribe', response.headers);
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(`Transcription failed (${response.status}): ${errorData.error || response.statusText}`);
+            
+            // Provide user-friendly error messages
+            let errorMsg = 'Transkription fehlgeschlagen';
+            if (response.status === 429) {
+                errorMsg = 'Zu viele Anfragen - bitte warten Sie einen Moment';
+            } else if (response.status >= 500) {
+                errorMsg = 'Server-Fehler - bitte versuchen Sie es später erneut';
+            }
+            
+            throw new Error(`${errorMsg} (${response.status}): ${errorData.error || response.statusText}`);
         }
         
         const data = await response.json();
@@ -222,6 +355,18 @@ async function transcribeAudio(base64Audio) {
         
     } catch (error) {
         console.error('Transcription error:', error);
+        
+        // Check if it's a network error
+        if (error.name === 'AbortError') {
+            updateStatus('⏱️ Timeout - Anfrage dauerte zu lange', 'error');
+        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            updateStatus('❌ Netzwerkfehler - Server nicht erreichbar', 'error');
+            backendAvailable = false;
+            updateApiStatusDisplay();
+        } else {
+            updateStatus(error.message || '❌ Transkription fehlgeschlagen', 'error');
+        }
+        
         return null;
     }
 }
@@ -232,26 +377,43 @@ async function transcribeAudio(base64Audio) {
 async function getChatResponse(userMessage) {
     try {
         // Add user message to conversation history
+        // We'll remove this if the request fails (see catch block)
         conversationHistory.push({
             role: 'user',
             content: userMessage
         });
         
-        const response = await fetch('/api/chat', {
+        const backendUrl = getBackendUrl();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const response = await fetch(`${backendUrl}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 messages: conversationHistory,
                 persona: personaSelect.value
-            })
+            }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         // Update rate limit info
         updateRateLimitFromHeaders('chat', response.headers);
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(`Chat failed (${response.status}): ${errorData.error || response.statusText}`);
+            
+            // Provide user-friendly error messages
+            let errorMsg = 'Chat fehlgeschlagen';
+            if (response.status === 429) {
+                errorMsg = 'Zu viele Anfragen - bitte warten Sie einen Moment';
+            } else if (response.status >= 500) {
+                errorMsg = 'Server-Fehler - bitte versuchen Sie es später erneut';
+            }
+            
+            throw new Error(`${errorMsg} (${response.status}): ${errorData.error || response.statusText}`);
         }
         
         const data = await response.json();
@@ -266,6 +428,24 @@ async function getChatResponse(userMessage) {
         
     } catch (error) {
         console.error('Chat error:', error);
+        
+        // Rollback: Remove the user message we added at the start
+        // This assumes we just added one message and nothing else modified the history
+        // If the history was modified externally, this would remove the wrong message
+        // For now, this is safe since only this function modifies conversationHistory during a request
+        conversationHistory.pop();
+        
+        // Check if it's a network error
+        if (error.name === 'AbortError') {
+            updateStatus('⏱️ Timeout - Anfrage dauerte zu lange', 'error');
+        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            updateStatus('❌ Netzwerkfehler - Server nicht erreichbar', 'error');
+            backendAvailable = false;
+            updateApiStatusDisplay();
+        } else {
+            updateStatus(error.message || '❌ Chat fehlgeschlagen', 'error');
+        }
+        
         return null;
     }
 }
@@ -400,6 +580,7 @@ function openSettings() {
     document.getElementById('ttsPitchValue').textContent = settings.ttsPitch.toFixed(1);
     document.getElementById('defaultPersona').value = settings.defaultPersona;
     document.getElementById('autoPlayTTS').checked = settings.autoPlayTTS;
+    document.getElementById('backendUrl').value = settings.backendUrl || '';
     
     settingsModal.classList.add('show');
 }
@@ -415,10 +596,13 @@ function closeSettings() {
  * Save settings from modal
  */
 function saveSettingsFromModal() {
+    const oldBackendUrl = settings.backendUrl;
+    
     settings.ttsSpeed = parseFloat(document.getElementById('ttsSpeed').value);
     settings.ttsPitch = parseFloat(document.getElementById('ttsPitch').value);
     settings.defaultPersona = document.getElementById('defaultPersona').value;
     settings.autoPlayTTS = document.getElementById('autoPlayTTS').checked;
+    settings.backendUrl = document.getElementById('backendUrl').value.trim();
     
     // Update persona selector
     personaSelect.value = settings.defaultPersona;
@@ -429,9 +613,19 @@ function saveSettingsFromModal() {
     // Close modal
     closeSettings();
     
-    // Show feedback
-    updateStatus('✅ Einstellungen gespeichert');
-    setTimeout(() => updateStatus('Bereit'), 2000);
+    // If backend URL changed, recheck API status
+    if (oldBackendUrl !== settings.backendUrl) {
+        updateStatus('🔄 Backend-URL aktualisiert - überprüfe Verbindung...');
+        checkApiStatus();
+    } else {
+        // Show feedback
+        updateStatus('✅ Einstellungen gespeichert');
+        setTimeout(() => {
+            if (backendAvailable) {
+                updateStatus('Bereit');
+            }
+        }, 2000);
+    }
 }
 
 /**
@@ -439,6 +633,7 @@ function saveSettingsFromModal() {
  */
 function resetSettings() {
     if (confirm('Einstellungen auf Standardwerte zurücksetzen?')) {
+        const oldBackendUrl = settings.backendUrl;
         settings = { ...DEFAULT_SETTINGS };
         
         // Update UI
@@ -448,6 +643,7 @@ function resetSettings() {
         document.getElementById('ttsPitchValue').textContent = settings.ttsPitch.toFixed(1);
         document.getElementById('defaultPersona').value = settings.defaultPersona;
         document.getElementById('autoPlayTTS').checked = settings.autoPlayTTS;
+        document.getElementById('backendUrl').value = settings.backendUrl || '';
         
         // Update persona selector
         personaSelect.value = settings.defaultPersona;
@@ -455,8 +651,18 @@ function resetSettings() {
         // Save to localStorage
         saveSettingsToStorage();
         
-        updateStatus('✅ Einstellungen zurückgesetzt');
-        setTimeout(() => updateStatus('Bereit'), 2000);
+        // If backend URL changed, recheck API status
+        if (oldBackendUrl !== settings.backendUrl) {
+            updateStatus('✅ Einstellungen zurückgesetzt - überprüfe Verbindung...');
+            checkApiStatus();
+        } else {
+            updateStatus('✅ Einstellungen zurückgesetzt');
+            setTimeout(() => {
+                if (backendAvailable) {
+                    updateStatus('Bereit');
+                }
+            }, 2000);
+        }
     }
 }
 

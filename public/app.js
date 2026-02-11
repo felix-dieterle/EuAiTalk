@@ -377,6 +377,7 @@ async function transcribeAudio(base64Audio) {
 async function getChatResponse(userMessage) {
     try {
         // Add user message to conversation history
+        // We'll remove this if the request fails (see catch block)
         conversationHistory.push({
             role: 'user',
             content: userMessage
@@ -428,7 +429,10 @@ async function getChatResponse(userMessage) {
     } catch (error) {
         console.error('Chat error:', error);
         
-        // Remove the user message from history if request failed
+        // Rollback: Remove the user message we added at the start
+        // This assumes we just added one message and nothing else modified the history
+        // If the history was modified externally, this would remove the wrong message
+        // For now, this is safe since only this function modifies conversationHistory during a request
         conversationHistory.pop();
         
         // Check if it's a network error

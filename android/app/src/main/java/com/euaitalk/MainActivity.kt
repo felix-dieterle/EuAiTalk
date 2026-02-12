@@ -201,10 +201,23 @@ class MainActivity : AppCompatActivity() {
     
     /**
      * Show error page when server is not reachable
+     * 
+     * Displays a user-friendly HTML error page instead of a blank white screen when
+     * the WebView fails to load the server. The error page includes:
+     * - A clear error title and description
+     * - Troubleshooting steps tailored to the build type (debug vs release)
+     * - A retry button to attempt reloading
+     * - App version information
+     * 
+     * @param error The WebResourceError containing error details, or null for generic errors
      */
     private fun showErrorPage(error: WebResourceError?) {
         val errorCode = error?.errorCode
         val errorDescription = error?.description ?: "Unbekannter Fehler"
+        
+        // HTML-escape the error description to prevent HTML injection
+        val safeErrorDescription = htmlEscape(errorDescription.toString())
+        val safeServerUrl = htmlEscape(SERVER_URL)
         
         val (errorTitle, errorDetails, troubleshootingSteps) = when (errorCode) {
             WebViewClient.ERROR_HOST_LOOKUP,
@@ -213,7 +226,7 @@ class MainActivity : AppCompatActivity() {
                 if (BuildConfig.DEBUG) {
                     Triple(
                         "Server nicht erreichbar",
-                        "Verbindung zu $SERVER_URL fehlgeschlagen",
+                        "Verbindung zu $safeServerUrl fehlgeschlagen",
                         """
                         <li>Starten Sie den Backend-Server mit <code>npm start</code></li>
                         <li>Überprüfen Sie die Server-URL in <code>app/build.gradle</code></li>
@@ -235,7 +248,7 @@ class MainActivity : AppCompatActivity() {
             }
             else -> Triple(
                 "Fehler beim Laden",
-                errorDescription.toString(),
+                safeErrorDescription,
                 "<li>Versuchen Sie es erneut</li><li>Überprüfen Sie Ihre Internetverbindung</li>"
             )
         }
@@ -360,7 +373,30 @@ class MainActivity : AppCompatActivity() {
             </html>
         """.trimIndent()
         
-        webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+        // Use 'about:blank' as baseURL to prevent potential security issues
+        webView.loadDataWithBaseURL("about:blank", html, "text/html", "UTF-8", null)
+    }
+    
+    /**
+     * HTML-escape a string to prevent HTML injection attacks
+     * 
+     * Replaces HTML special characters with their entity equivalents:
+     * - & becomes &amp;
+     * - < becomes &lt;
+     * - > becomes &gt;
+     * - " becomes &quot;
+     * - ' becomes &#x27;
+     * 
+     * @param text The text to escape
+     * @return The HTML-escaped text
+     */
+    private fun htmlEscape(text: String): String {
+        return text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#x27;")
     }
 
     /**

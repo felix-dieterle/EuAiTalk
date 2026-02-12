@@ -11,8 +11,8 @@ android {
         applicationId "com.euaitalk"
         minSdk 24
         targetSdk 36
-        versionCode 10013
-        versionName "1.0.13"
+        versionCode 10014
+        versionName "1.0.14"
         
         // Server URL configuration for different build variants
         buildConfigField "String", "SERVER_URL", "\"http://10.0.2.2:3000\""

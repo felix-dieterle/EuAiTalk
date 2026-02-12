@@ -222,7 +222,7 @@ class MainActivity : AppCompatActivity() {
         
         // Build error message components
         // Note: troubleshootingSteps contains intentional HTML markup (list items and code tags)
-        // errorTitle and safeErrorDetails are escaped for security
+        // errorTitle will be escaped to safeErrorTitle after selection for defense-in-depth
         val (errorTitle, safeErrorDetails, troubleshootingSteps) = when (errorCode) {
             WebViewClient.ERROR_HOST_LOOKUP,
             WebViewClient.ERROR_CONNECT,
@@ -257,7 +257,9 @@ class MainActivity : AppCompatActivity() {
             )
         }
         
-        // Escape errorTitle for defensive programming, even though it's currently hardcoded
+        // Escape errorTitle for defense-in-depth security
+        // While currently hardcoded, this ensures safety if the code is modified later
+        // to include dynamic content, following the principle of "secure by default"
         val safeErrorTitle = htmlEscape(errorTitle)
         
         val html = """

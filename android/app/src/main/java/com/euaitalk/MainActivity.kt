@@ -261,6 +261,7 @@ class MainActivity : AppCompatActivity() {
         // While currently hardcoded, this ensures safety if the code is modified later
         // to include dynamic content, following the principle of "secure by default"
         val safeErrorTitle = htmlEscape(errorTitle)
+        val safeVersionName = htmlEscape(BuildConfig.VERSION_NAME)
         
         val html = """
             <!DOCTYPE html>
@@ -375,7 +376,7 @@ class MainActivity : AppCompatActivity() {
                         🔄 Erneut versuchen
                     </button>
                     <div class="footer">
-                        EuAiTalk v${BuildConfig.VERSION_NAME}
+                        EuAiTalk v$safeVersionName
                     </div>
                 </div>
             </body>

@@ -3,6 +3,7 @@ package com.euaitalk
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.TextUtils
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -221,8 +222,8 @@ class MainActivity : AppCompatActivity() {
         
         // Build error message components
         // Note: troubleshootingSteps contains intentional HTML markup (list items and code tags)
-        // errorTitle and errorDetails are escaped for security
-        val (errorTitle, errorDetails, troubleshootingSteps) = when (errorCode) {
+        // errorTitle and safeErrorDetails are escaped for security
+        val (errorTitle, safeErrorDetails, troubleshootingSteps) = when (errorCode) {
             WebViewClient.ERROR_HOST_LOOKUP,
             WebViewClient.ERROR_CONNECT,
             WebViewClient.ERROR_TIMEOUT -> {
@@ -361,7 +362,7 @@ class MainActivity : AppCompatActivity() {
                 <div class="container">
                     <div class="icon">⚠️</div>
                     <h1>$safeErrorTitle</h1>
-                    <div class="error-details">$errorDetails</div>
+                    <div class="error-details">$safeErrorDetails</div>
                     <div class="steps">
                         <h2>Was Sie tun können:</h2>
                         <ul>
@@ -386,23 +387,14 @@ class MainActivity : AppCompatActivity() {
     /**
      * HTML-escape a string to prevent HTML injection attacks
      * 
-     * Replaces HTML special characters with their entity equivalents:
-     * - & becomes &amp;
-     * - < becomes &lt;
-     * - > becomes &gt;
-     * - " becomes &quot;
-     * - ' becomes &#x27;
+     * Uses Android's TextUtils.htmlEncode() to properly escape HTML special characters.
+     * This ensures comprehensive escaping and handles edge cases correctly.
      * 
      * @param text The text to escape
      * @return The HTML-escaped text
      */
     private fun htmlEscape(text: String): String {
-        return text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
-            .replace("'", "&#x27;")
+        return TextUtils.htmlEncode(text)
     }
 
     /**

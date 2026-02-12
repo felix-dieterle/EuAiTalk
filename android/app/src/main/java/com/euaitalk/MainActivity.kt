@@ -223,6 +223,7 @@ class MainActivity : AppCompatActivity() {
         // Build error message components
         // Note: troubleshootingSteps contains intentional HTML markup (list items and code tags)
         // errorDetails is constructed using already-escaped variables (safeServerUrl, safeErrorDescription)
+        //   - String templates are safe when interpolating pre-escaped variables
         // errorTitle will be escaped to safeErrorTitle below for defense-in-depth
         val (errorTitle, errorDetails, troubleshootingSteps) = when (errorCode) {
             WebViewClient.ERROR_HOST_LOOKUP,
@@ -231,7 +232,7 @@ class MainActivity : AppCompatActivity() {
                 if (BuildConfig.DEBUG) {
                     Triple(
                         "Server nicht erreichbar",
-                        "Verbindung zu " + safeServerUrl + " fehlgeschlagen",
+                        "Verbindung zu $safeServerUrl fehlgeschlagen",
                         """
                         <li>Starten Sie den Backend-Server mit <code>npm start</code></li>
                         <li>Überprüfen Sie die Server-URL in <code>app/build.gradle</code></li>

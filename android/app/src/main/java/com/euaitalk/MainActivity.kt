@@ -23,7 +23,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private val PERMISSION_REQUEST_CODE = 100
-    private var isPageLoaded = false
     
     // Server URL from BuildConfig - configured per build variant
     // Debug: http://10.0.2.2:3000 (emulator localhost)
@@ -114,16 +113,6 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 // Keep navigation within the WebView
                 return false
-            }
-            
-            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                isPageLoaded = false
-            }
-            
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                isPageLoaded = true
             }
             
             override fun onReceivedError(

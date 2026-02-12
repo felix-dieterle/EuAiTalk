@@ -219,6 +219,9 @@ class MainActivity : AppCompatActivity() {
         val safeErrorDescription = htmlEscape(errorDescription.toString())
         val safeServerUrl = htmlEscape(SERVER_URL)
         
+        // Build error message components
+        // Note: troubleshootingSteps contains intentional HTML markup (list items and code tags)
+        // errorTitle and errorDetails are escaped for security
         val (errorTitle, errorDetails, troubleshootingSteps) = when (errorCode) {
             WebViewClient.ERROR_HOST_LOOKUP,
             WebViewClient.ERROR_CONNECT,
@@ -252,6 +255,9 @@ class MainActivity : AppCompatActivity() {
                 "<li>Versuchen Sie es erneut</li><li>Überprüfen Sie Ihre Internetverbindung</li>"
             )
         }
+        
+        // Escape errorTitle for defensive programming, even though it's currently hardcoded
+        val safeErrorTitle = htmlEscape(errorTitle)
         
         val html = """
             <!DOCTYPE html>
@@ -354,7 +360,7 @@ class MainActivity : AppCompatActivity() {
             <body>
                 <div class="container">
                     <div class="icon">⚠️</div>
-                    <h1>$errorTitle</h1>
+                    <h1>$safeErrorTitle</h1>
                     <div class="error-details">$errorDetails</div>
                     <div class="steps">
                         <h2>Was Sie tun können:</h2>

@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private val PERMISSION_REQUEST_CODE = 100
+    private var isPageLoaded = false
     
     // Server URL from BuildConfig - configured per build variant
     // Debug: http://10.0.2.2:3000 (emulator localhost)
@@ -115,6 +116,16 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
             
+            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                isPageLoaded = false
+            }
+            
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                isPageLoaded = true
+            }
+            
             override fun onReceivedError(
                 view: WebView?,
                 request: WebResourceRequest?,
@@ -127,33 +138,8 @@ class MainActivity : AppCompatActivity() {
                 val isMainFrameError = request?.isForMainFrame == true
                 
                 if (isMainFrameError) {
-                    val errorMessage = when (errorCode) {
-                        WebViewClient.ERROR_HOST_LOOKUP,
-                        WebViewClient.ERROR_CONNECT,
-                        WebViewClient.ERROR_TIMEOUT -> {
-                            if (BuildConfig.DEBUG) {
-                                "Server nicht erreichbar.\n\n" +
-                                "Bitte stellen Sie sicher, dass:\n" +
-                                "1. Der Backend-Server läuft (npm start)\n" +
-                                "2. Die Server-URL korrekt konfiguriert ist\n" +
-                                "3. Ihr Gerät mit dem Netzwerk verbunden ist\n\n" +
-                                "Siehe android/README.md für Konfigurationsanleitung."
-                            } else {
-                                "Server nicht erreichbar.\n\n" +
-                                "Bitte stellen Sie sicher, dass:\n" +
-                                "1. Der Backend-Server gestartet ist\n" +
-                                "2. Die Server-URL korrekt konfiguriert ist\n" +
-                                "3. Ihr Gerät mit dem Internet verbunden ist"
-                            }
-                        }
-                        else -> "Fehler beim Laden: ${error?.description}"
-                    }
-                    
-                    Toast.makeText(
-                        this@MainActivity,
-                        errorMessage,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    // Show error page instead of blank white screen
+                    showErrorPage(error)
                     
                     // Log for debugging (debug builds only to avoid exposing URL in production)
                     if (BuildConfig.DEBUG) {
@@ -222,6 +208,170 @@ class MainActivity : AppCompatActivity() {
      */
     private fun loadApp() {
         webView.loadUrl(SERVER_URL)
+    }
+    
+    /**
+     * Show error page when server is not reachable
+     */
+    private fun showErrorPage(error: WebResourceError?) {
+        val errorCode = error?.errorCode
+        val errorDescription = error?.description ?: "Unbekannter Fehler"
+        
+        val (errorTitle, errorDetails, troubleshootingSteps) = when (errorCode) {
+            WebViewClient.ERROR_HOST_LOOKUP,
+            WebViewClient.ERROR_CONNECT,
+            WebViewClient.ERROR_TIMEOUT -> {
+                if (BuildConfig.DEBUG) {
+                    Triple(
+                        "Server nicht erreichbar",
+                        "Verbindung zu $SERVER_URL fehlgeschlagen",
+                        """
+                        <li>Starten Sie den Backend-Server mit <code>npm start</code></li>
+                        <li>Überprüfen Sie die Server-URL in <code>app/build.gradle</code></li>
+                        <li>Stellen Sie sicher, dass Ihr Gerät/Emulator mit dem Netzwerk verbunden ist</li>
+                        <li>Für echte Geräte: Verwenden Sie die lokale IP-Adresse (z.B. 192.168.1.100:3000)</li>
+                        """.trimIndent()
+                    )
+                } else {
+                    Triple(
+                        "Server nicht erreichbar",
+                        "Die Verbindung zum Server konnte nicht hergestellt werden",
+                        """
+                        <li>Stellen Sie sicher, dass der Server gestartet ist</li>
+                        <li>Überprüfen Sie Ihre Internetverbindung</li>
+                        <li>Die Server-URL könnte falsch konfiguriert sein</li>
+                        """.trimIndent()
+                    )
+                }
+            }
+            else -> Triple(
+                "Fehler beim Laden",
+                errorDescription.toString(),
+                "<li>Versuchen Sie es erneut</li><li>Überprüfen Sie Ihre Internetverbindung</li>"
+            )
+        }
+        
+        val html = """
+            <!DOCTYPE html>
+            <html lang="de">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Verbindungsfehler</title>
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        min-height: 100vh;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px;
+                        color: #333;
+                    }
+                    .container {
+                        background: white;
+                        border-radius: 16px;
+                        padding: 30px;
+                        max-width: 500px;
+                        width: 100%;
+                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                    }
+                    .icon {
+                        font-size: 64px;
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+                    h1 {
+                        font-size: 24px;
+                        margin-bottom: 10px;
+                        text-align: center;
+                        color: #667eea;
+                    }
+                    .error-details {
+                        background: #f5f5f5;
+                        padding: 15px;
+                        border-radius: 8px;
+                        margin-bottom: 20px;
+                        font-size: 14px;
+                        color: #666;
+                        word-break: break-word;
+                    }
+                    .steps {
+                        margin-bottom: 20px;
+                    }
+                    .steps h2 {
+                        font-size: 16px;
+                        margin-bottom: 10px;
+                        color: #555;
+                    }
+                    .steps ul {
+                        padding-left: 20px;
+                        line-height: 1.6;
+                    }
+                    .steps li {
+                        margin-bottom: 8px;
+                        color: #666;
+                        font-size: 14px;
+                    }
+                    .steps code {
+                        background: #f0f0f0;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: 'Courier New', monospace;
+                        font-size: 12px;
+                    }
+                    .button {
+                        width: 100%;
+                        padding: 14px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                    }
+                    .button:active {
+                        transform: scale(0.98);
+                    }
+                    .footer {
+                        margin-top: 20px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #999;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="icon">⚠️</div>
+                    <h1>$errorTitle</h1>
+                    <div class="error-details">$errorDetails</div>
+                    <div class="steps">
+                        <h2>Was Sie tun können:</h2>
+                        <ul>
+                            $troubleshootingSteps
+                        </ul>
+                    </div>
+                    <button class="button" onclick="window.location.reload()">
+                        🔄 Erneut versuchen
+                    </button>
+                    <div class="footer">
+                        EuAiTalk v${BuildConfig.VERSION_NAME}
+                    </div>
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
+        
+        webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
     }
 
     /**

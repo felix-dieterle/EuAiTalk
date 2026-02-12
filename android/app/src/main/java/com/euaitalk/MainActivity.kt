@@ -231,7 +231,7 @@ class MainActivity : AppCompatActivity() {
                 if (BuildConfig.DEBUG) {
                     Triple(
                         "Server nicht erreichbar",
-                        "Verbindung zu $safeServerUrl fehlgeschlagen",
+                        "Verbindung zu " + safeServerUrl + " fehlgeschlagen",
                         """
                         <li>Starten Sie den Backend-Server mit <code>npm start</code></li>
                         <li>Überprüfen Sie die Server-URL in <code>app/build.gradle</code></li>

@@ -139,6 +139,57 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            
+            override fun onReceivedHttpError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                errorResponse: WebResourceResponse?
+            ) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                
+                val isMainFrameError = request?.isForMainFrame == true
+                
+                if (isMainFrameError) {
+                    // Show error page for HTTP errors (4xx, 5xx)
+                    val httpError = object : WebResourceError {
+                        override fun getErrorCode(): Int = errorResponse?.statusCode ?: -1
+                        override fun getDescription(): CharSequence = 
+                            "HTTP ${errorResponse?.statusCode ?: "Error"}: ${errorResponse?.reasonPhrase ?: "Unknown error"}"
+                    }
+                    showErrorPage(httpError)
+                    
+                    // Log for debugging
+                    if (BuildConfig.DEBUG) {
+                        android.util.Log.d("MainActivity", "HTTP Error loading $SERVER_URL: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}")
+                    } else {
+                        android.util.Log.e("MainActivity", "HTTP Error loading server: ${errorResponse?.statusCode}")
+                    }
+                }
+            }
+            
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                
+                // Check if the page is actually loaded by evaluating JavaScript
+                // This helps detect "successful" loads that result in blank pages
+                view?.evaluateJavascript(
+                    "(function() { return document.body && document.body.innerHTML.length > 0; })();"
+                ) { result ->
+                    // result is "true" if page has content, "false" or "null" if blank
+                    if (result == "false" || result == "null") {
+                        // Page loaded but is blank - likely a connection issue
+                        if (BuildConfig.DEBUG) {
+                            android.util.Log.d("MainActivity", "Page loaded but appears blank")
+                        }
+                        // Show error page for blank content
+                        val blankPageError = object : WebResourceError {
+                            override fun getErrorCode(): Int = WebViewClient.ERROR_UNKNOWN
+                            override fun getDescription(): CharSequence = "Seite wurde geladen, aber keine Inhalte angezeigt"
+                        }
+                        showErrorPage(blankPageError)
+                    }
+                }
+            }
         }
         
         // Set WebChromeClient to handle permissions and dialogs

@@ -51,7 +51,8 @@ const clearLogsButton = document.getElementById('clearLogs');
 /**
  * Setup console interception to capture logs
  * Note: The intercepting flag is not thread-safe but is sufficient for
- * single-threaded JavaScript execution in the browser.
+ * single-threaded JavaScript execution in the browser. It prevents infinite
+ * recursion when our logging code uses console methods.
  */
 function setupConsoleInterception() {
     const originalLog = console.log;
@@ -68,10 +69,9 @@ function setupConsoleInterception() {
                 const message = args.map(arg => 
                     typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
                 ).join(' ');
-                // Skip logging our own log messages
-                if (!message.includes('[INFO]') && !message.includes('[ERROR]') && !message.includes('[WARN]')) {
-                    addLogEntry('info', message);
-                }
+                addLogEntry('info', message);
+            } catch (e) {
+                // Silently ignore logging errors to avoid breaking the app
             } finally {
                 intercepting = false;
             }
@@ -86,9 +86,9 @@ function setupConsoleInterception() {
                 const message = args.map(arg => 
                     typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
                 ).join(' ');
-                if (!message.includes('[ERROR]')) {
-                    addLogEntry('error', message);
-                }
+                addLogEntry('error', message);
+            } catch (e) {
+                // Silently ignore logging errors
             } finally {
                 intercepting = false;
             }
@@ -103,9 +103,9 @@ function setupConsoleInterception() {
                 const message = args.map(arg => 
                     typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
                 ).join(' ');
-                if (!message.includes('[WARN]')) {
-                    addLogEntry('warn', message);
-                }
+                addLogEntry('warn', message);
+            } catch (e) {
+                // Silently ignore logging errors
             } finally {
                 intercepting = false;
             }
@@ -895,10 +895,14 @@ function updateLogsDisplay() {
         
         let detailsHtml = '';
         if (log.details) {
-            const detailsStr = typeof log.details === 'object' 
-                ? JSON.stringify(log.details, null, 2) 
-                : log.details;
-            detailsHtml = `<pre class="log-details">${escapeHtml(detailsStr)}</pre>`;
+            try {
+                const detailsStr = typeof log.details === 'object' 
+                    ? JSON.stringify(log.details, null, 2) 
+                    : log.details;
+                detailsHtml = `<pre class="log-details">${escapeHtml(detailsStr)}</pre>`;
+            } catch (error) {
+                detailsHtml = `<pre class="log-details">[Error serializing details: ${error.message}]</pre>`;
+            }
         }
         
         return `

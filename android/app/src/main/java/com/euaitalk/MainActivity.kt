@@ -48,8 +48,8 @@ class MainActivity : AppCompatActivity() {
     // Release: Set in app/build.gradle
     private val DEFAULT_SERVER_URL = BuildConfig.SERVER_URL
     
-    // Log storage
-    private val logMessages = mutableListOf<LogEntry>()
+    // Log storage - using ArrayDeque for O(1) removal of oldest entries
+    private val logMessages = ArrayDeque<LogEntry>()
     private val MAX_LOGS = 100
     
     data class LogEntry(
@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         synchronized(logMessages) {
             logMessages.add(LogEntry(System.currentTimeMillis(), level, message))
             if (logMessages.size > MAX_LOGS) {
-                logMessages.removeAt(0)
+                logMessages.removeFirst() // O(1) with ArrayDeque
             }
         }
     }
@@ -190,7 +190,8 @@ class MainActivity : AppCompatActivity() {
                     
                     // Log for debugging (debug builds only to avoid exposing URL in production)
                     val serverUrl = getServerUrl()
-                    val errorLog = "Error loading $serverUrl: ${error?.description} (code: $errorCode)"
+                    val sanitizedUrl = serverUrl.replace(Regex("://[^@]+@"), "://***@")
+                    val errorLog = "Error loading $sanitizedUrl: ${error?.description} (code: $errorCode)"
                     addLog("ERROR", errorLog)
                     if (BuildConfig.DEBUG) {
                         android.util.Log.d("MainActivity", errorLog)
@@ -216,7 +217,8 @@ class MainActivity : AppCompatActivity() {
                     
                     // Log for debugging
                     val serverUrl = getServerUrl()
-                    val errorLog = "HTTP Error loading $serverUrl: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}"
+                    val sanitizedUrl = serverUrl.replace(Regex("://[^@]+@"), "://***@")
+                    val errorLog = "HTTP Error loading $sanitizedUrl: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}"
                     addLog("ERROR", errorLog)
                     if (BuildConfig.DEBUG) {
                         android.util.Log.d("MainActivity", errorLog)
@@ -317,7 +319,9 @@ class MainActivity : AppCompatActivity() {
      */
     private fun loadApp() {
         val serverUrl = getServerUrl()
-        addLog("INFO", "Loading app from: $serverUrl")
+        // Sanitize URL for logging (remove potential credentials)
+        val sanitizedUrl = serverUrl.replace(Regex("://[^@]+@"), "://***@")
+        addLog("INFO", "Loading app from: $sanitizedUrl")
         webView.loadUrl(serverUrl)
     }
     
@@ -622,14 +626,17 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton(R.string.settings_save) { _, _ ->
                 val newUrl = input.text.toString().trim()
                 saveServerUrl(newUrl)
-                addLog("INFO", "Backend URL updated to: ${if (newUrl.isEmpty()) DEFAULT_SERVER_URL else newUrl}")
+                val sanitizedUrl = (if (newUrl.isEmpty()) DEFAULT_SERVER_URL else newUrl)
+                    .replace(Regex("://[^@]+@"), "://***@")
+                addLog("INFO", "Backend URL updated to: $sanitizedUrl")
                 Toast.makeText(this, R.string.backend_url_updated, Toast.LENGTH_SHORT).show()
                 // Reload the app with new URL
                 loadApp()
             }
             .setNeutralButton(R.string.settings_reset) { _, _ ->
                 saveServerUrl("")
-                addLog("INFO", "Backend URL reset to default: $DEFAULT_SERVER_URL")
+                val sanitizedUrl = DEFAULT_SERVER_URL.replace(Regex("://[^@]+@"), "://***@")
+                addLog("INFO", "Backend URL reset to default: $sanitizedUrl")
                 Toast.makeText(this, R.string.backend_url_reset, Toast.LENGTH_SHORT).show()
                 // Reload the app with default URL
                 loadApp()

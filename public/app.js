@@ -50,6 +50,8 @@ const clearLogsButton = document.getElementById('clearLogs');
 
 /**
  * Setup console interception to capture logs
+ * Note: The intercepting flag is not thread-safe but is sufficient for
+ * single-threaded JavaScript execution in the browser.
  */
 function setupConsoleInterception() {
     const originalLog = console.log;
@@ -142,6 +144,12 @@ async function init() {
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) {
             closeSettings();
+        }
+    });
+    
+    logsModal.addEventListener('click', (e) => {
+        if (e.target === logsModal) {
+            closeLogs();
         }
     });
     

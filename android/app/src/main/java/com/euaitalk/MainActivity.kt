@@ -660,7 +660,9 @@ class MainActivity : AppCompatActivity() {
             } else {
                 logMessages.forEach { log ->
                     val time = dateFormat.format(Date(log.timestamp))
-                    logsText.append("[$time] ${log.level}: ${log.message}\n\n")
+                    logsText.append('[').append(time).append("] ")
+                        .append(log.level).append(": ")
+                        .append(log.message).append("\n\n")
                 }
             }
         }

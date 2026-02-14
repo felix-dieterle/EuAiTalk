@@ -61,17 +61,29 @@ function setupConsoleInterception() {
     
     let intercepting = false;
     
+    /**
+     * Safe JSON stringify that handles circular references
+     */
+    function safeStringify(obj) {
+        try {
+            return JSON.stringify(obj);
+        } catch (e) {
+            return '[Object with circular reference]';
+        }
+    }
+    
     console.log = function(...args) {
         originalLog.apply(console, args);
         if (!intercepting && args.length > 0) {
             intercepting = true;
             try {
                 const message = args.map(arg => 
-                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                    typeof arg === 'object' ? safeStringify(arg) : String(arg)
                 ).join(' ');
                 addLogEntry('info', message);
             } catch (e) {
-                // Silently ignore logging errors to avoid breaking the app
+                // Log the error to the original console so developers are aware
+                originalError.call(console, 'Failed to capture log:', e);
             } finally {
                 intercepting = false;
             }
@@ -84,11 +96,11 @@ function setupConsoleInterception() {
             intercepting = true;
             try {
                 const message = args.map(arg => 
-                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                    typeof arg === 'object' ? safeStringify(arg) : String(arg)
                 ).join(' ');
                 addLogEntry('error', message);
             } catch (e) {
-                // Silently ignore logging errors
+                originalError.call(console, 'Failed to capture error log:', e);
             } finally {
                 intercepting = false;
             }
@@ -101,11 +113,11 @@ function setupConsoleInterception() {
             intercepting = true;
             try {
                 const message = args.map(arg => 
-                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                    typeof arg === 'object' ? safeStringify(arg) : String(arg)
                 ).join(' ');
                 addLogEntry('warn', message);
             } catch (e) {
-                // Silently ignore logging errors
+                originalWarn.call(console, 'Failed to capture warning log:', e);
             } finally {
                 intercepting = false;
             }

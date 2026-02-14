@@ -1,15 +1,25 @@
 package com.euaitalk
 
 import android.Manifest
+import android.app.AlertDialog
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.InputType
 import android.text.TextUtils
+import android.view.Menu
+import android.view.MenuItem
 import android.webkit.*
+import android.widget.EditText
+import android.widget.ScrollView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Main Activity for EuAiTalk Android App
@@ -29,10 +39,24 @@ class MainActivity : AppCompatActivity() {
     // Pages with less content are likely blank or incomplete
     private val MIN_PAGE_CONTENT_LENGTH = 100
     
+    // SharedPreferences for storing settings
+    private val PREFS_NAME = "EuAiTalkPrefs"
+    private val PREF_BACKEND_URL = "backend_url"
+    
     // Server URL from BuildConfig - configured per build variant
     // Debug: http://10.0.2.2:3000 (emulator localhost)
     // Release: Set in app/build.gradle
-    private val SERVER_URL = BuildConfig.SERVER_URL
+    private val DEFAULT_SERVER_URL = BuildConfig.SERVER_URL
+    
+    // Log storage
+    private val logMessages = mutableListOf<LogEntry>()
+    private val MAX_LOGS = 100
+    
+    data class LogEntry(
+        val timestamp: Long,
+        val level: String,
+        val message: String
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +75,35 @@ class MainActivity : AppCompatActivity() {
         
         // Load the app
         loadApp()
+    }
+    
+    /**
+     * Get the configured backend URL from SharedPreferences or use default
+     */
+    private fun getServerUrl(): String {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val customUrl = prefs.getString(PREF_BACKEND_URL, "")
+        return if (customUrl.isNullOrEmpty()) DEFAULT_SERVER_URL else customUrl
+    }
+    
+    /**
+     * Save backend URL to SharedPreferences
+     */
+    private fun saveServerUrl(url: String) {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(PREF_BACKEND_URL, url).apply()
+    }
+    
+    /**
+     * Add a log entry
+     */
+    private fun addLog(level: String, message: String) {
+        synchronized(logMessages) {
+            logMessages.add(LogEntry(System.currentTimeMillis(), level, message))
+            if (logMessages.size > MAX_LOGS) {
+                logMessages.removeAt(0)
+            }
+        }
     }
 
     /**
@@ -136,8 +189,11 @@ class MainActivity : AppCompatActivity() {
                     showErrorPage(error)
                     
                     // Log for debugging (debug builds only to avoid exposing URL in production)
+                    val serverUrl = getServerUrl()
+                    val errorLog = "Error loading $serverUrl: ${error?.description} (code: $errorCode)"
+                    addLog("ERROR", errorLog)
                     if (BuildConfig.DEBUG) {
-                        android.util.Log.d("MainActivity", "Error loading $SERVER_URL: ${error?.description} (code: $errorCode)")
+                        android.util.Log.d("MainActivity", errorLog)
                     } else {
                         android.util.Log.e("MainActivity", "Error loading server: ${error?.description} (code: $errorCode)")
                     }
@@ -159,8 +215,11 @@ class MainActivity : AppCompatActivity() {
                     showErrorPage(null)
                     
                     // Log for debugging
+                    val serverUrl = getServerUrl()
+                    val errorLog = "HTTP Error loading $serverUrl: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}"
+                    addLog("ERROR", errorLog)
                     if (BuildConfig.DEBUG) {
-                        android.util.Log.d("MainActivity", "HTTP Error loading $SERVER_URL: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}")
+                        android.util.Log.d("MainActivity", errorLog)
                     } else {
                         android.util.Log.e("MainActivity", "HTTP Error loading server: ${errorResponse?.statusCode}")
                     }
@@ -170,9 +229,10 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 
+                val serverUrl = getServerUrl()
                 // Only check for blank pages when loading the server URL, not error pages or other navigations
                 // This prevents infinite loops where the error page triggers another blank page detection
-                if (url != SERVER_URL) {
+                if (url != serverUrl) {
                     return
                 }
                 
@@ -238,10 +298,14 @@ class MainActivity : AppCompatActivity() {
             // Handle console messages (useful for debugging)
             override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
                 consoleMessage?.let {
-                    android.util.Log.d(
-                        "WebView",
-                        "${it.message()} -- From line ${it.lineNumber()} of ${it.sourceId()}"
-                    )
+                    val logMsg = "${it.message()} -- From line ${it.lineNumber()} of ${it.sourceId()}"
+                    val level = when (it.messageLevel()) {
+                        ConsoleMessage.MessageLevel.ERROR -> "ERROR"
+                        ConsoleMessage.MessageLevel.WARNING -> "WARN"
+                        else -> "INFO"
+                    }
+                    addLog(level, logMsg)
+                    android.util.Log.d("WebView", logMsg)
                 }
                 return true
             }
@@ -252,7 +316,9 @@ class MainActivity : AppCompatActivity() {
      * Load the web app
      */
     private fun loadApp() {
-        webView.loadUrl(SERVER_URL)
+        val serverUrl = getServerUrl()
+        addLog("INFO", "Loading app from: $serverUrl")
+        webView.loadUrl(serverUrl)
     }
     
     /**
@@ -273,7 +339,8 @@ class MainActivity : AppCompatActivity() {
         
         // HTML-escape the error description to prevent HTML injection
         val safeErrorDescription = htmlEscape(errorDescription.toString())
-        val safeServerUrl = htmlEscape(SERVER_URL)
+        val serverUrl = getServerUrl()
+        val safeServerUrl = htmlEscape(serverUrl)
         
         // Build error message components
         // Note: troubleshootingSteps contains intentional HTML markup (list items and code tags)
@@ -508,5 +575,108 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         webView.destroy()
         super.onDestroy()
+    }
+    
+    /**
+     * Create options menu
+     */
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+    
+    /**
+     * Handle menu item selection
+     */
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_settings -> {
+                showSettingsDialog()
+                true
+            }
+            R.id.action_logs -> {
+                showLogsDialog()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    /**
+     * Show settings dialog for backend URL configuration
+     */
+    private fun showSettingsDialog() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val currentUrl = prefs.getString(PREF_BACKEND_URL, "") ?: ""
+        
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            setText(currentUrl)
+            hint = getString(R.string.settings_backend_url_hint)
+        }
+        
+        AlertDialog.Builder(this)
+            .setTitle(R.string.settings_title)
+            .setMessage(R.string.settings_backend_url_description)
+            .setView(input)
+            .setPositiveButton(R.string.settings_save) { _, _ ->
+                val newUrl = input.text.toString().trim()
+                saveServerUrl(newUrl)
+                addLog("INFO", "Backend URL updated to: ${if (newUrl.isEmpty()) DEFAULT_SERVER_URL else newUrl}")
+                Toast.makeText(this, R.string.backend_url_updated, Toast.LENGTH_SHORT).show()
+                // Reload the app with new URL
+                loadApp()
+            }
+            .setNeutralButton(R.string.settings_reset) { _, _ ->
+                saveServerUrl("")
+                addLog("INFO", "Backend URL reset to default: $DEFAULT_SERVER_URL")
+                Toast.makeText(this, R.string.backend_url_reset, Toast.LENGTH_SHORT).show()
+                // Reload the app with default URL
+                loadApp()
+            }
+            .setNegativeButton(R.string.settings_cancel, null)
+            .show()
+    }
+    
+    /**
+     * Show logs dialog
+     */
+    private fun showLogsDialog() {
+        val logsText = StringBuilder()
+        val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        
+        synchronized(logMessages) {
+            if (logMessages.isEmpty()) {
+                logsText.append(getString(R.string.logs_empty))
+            } else {
+                logMessages.forEach { log ->
+                    val time = dateFormat.format(Date(log.timestamp))
+                    logsText.append("[$time] ${log.level}: ${log.message}\n\n")
+                }
+            }
+        }
+        
+        val textView = TextView(this).apply {
+            text = logsText.toString()
+            setPadding(40, 40, 40, 40)
+            setTextIsSelectable(true)
+        }
+        
+        val scrollView = ScrollView(this).apply {
+            addView(textView)
+        }
+        
+        AlertDialog.Builder(this)
+            .setTitle(R.string.logs_title)
+            .setView(scrollView)
+            .setPositiveButton(R.string.logs_close, null)
+            .setNegativeButton(R.string.logs_clear) { _, _ ->
+                synchronized(logMessages) {
+                    logMessages.clear()
+                }
+                addLog("INFO", "Logs cleared")
+                Toast.makeText(this, "Logs gelöscht", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
 }

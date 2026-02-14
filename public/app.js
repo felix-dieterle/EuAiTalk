@@ -72,57 +72,32 @@ function setupConsoleInterception() {
         }
     }
     
-    console.log = function(...args) {
-        originalLog.apply(console, args);
-        if (!intercepting && args.length > 0) {
-            intercepting = true;
-            try {
-                const message = args.map(arg => 
-                    typeof arg === 'object' ? safeStringify(arg) : String(arg)
-                ).join(' ');
-                addLogEntry('info', message);
-            } catch (e) {
-                // Log the error to the original console so developers are aware
-                originalError.call(console, 'Failed to capture log:', e);
-            } finally {
-                intercepting = false;
+    /**
+     * Create a console interceptor for a specific log level
+     */
+    function createInterceptor(originalMethod, fallbackMethod, level) {
+        return function(...args) {
+            originalMethod.apply(console, args);
+            if (!intercepting && args.length > 0) {
+                intercepting = true;
+                try {
+                    const message = args.map(arg => 
+                        typeof arg === 'object' ? safeStringify(arg) : String(arg)
+                    ).join(' ');
+                    addLogEntry(level, message);
+                } catch (e) {
+                    // Log the error to the original console so developers are aware
+                    fallbackMethod.call(console, 'Failed to capture log:', e);
+                } finally {
+                    intercepting = false;
+                }
             }
-        }
-    };
+        };
+    }
     
-    console.error = function(...args) {
-        originalError.apply(console, args);
-        if (!intercepting && args.length > 0) {
-            intercepting = true;
-            try {
-                const message = args.map(arg => 
-                    typeof arg === 'object' ? safeStringify(arg) : String(arg)
-                ).join(' ');
-                addLogEntry('error', message);
-            } catch (e) {
-                originalError.call(console, 'Failed to capture error log:', e);
-            } finally {
-                intercepting = false;
-            }
-        }
-    };
-    
-    console.warn = function(...args) {
-        originalWarn.apply(console, args);
-        if (!intercepting && args.length > 0) {
-            intercepting = true;
-            try {
-                const message = args.map(arg => 
-                    typeof arg === 'object' ? safeStringify(arg) : String(arg)
-                ).join(' ');
-                addLogEntry('warn', message);
-            } catch (e) {
-                originalWarn.call(console, 'Failed to capture warning log:', e);
-            } finally {
-                intercepting = false;
-            }
-        }
-    };
+    console.log = createInterceptor(originalLog, originalError, 'info');
+    console.error = createInterceptor(originalError, originalError, 'error');
+    console.warn = createInterceptor(originalWarn, originalWarn, 'warn');
 }
 
 /**

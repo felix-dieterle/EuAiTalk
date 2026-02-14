@@ -651,16 +651,16 @@ class MainActivity : AppCompatActivity() {
      * Show logs dialog
      */
     private fun showLogsDialog() {
-        val logsText = StringBuilder()
+        val formattedLogs = StringBuilder()
         val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         
         synchronized(logMessages) {
             if (logMessages.isEmpty()) {
-                logsText.append(getString(R.string.logs_empty))
+                formattedLogs.append(getString(R.string.logs_empty))
             } else {
                 logMessages.forEach { log ->
                     val time = dateFormat.format(Date(log.timestamp))
-                    logsText.append('[').append(time).append("] ")
+                    formattedLogs.append('[').append(time).append("] ")
                         .append(log.level).append(": ")
                         .append(log.message).append("\n\n")
                 }
@@ -668,7 +668,7 @@ class MainActivity : AppCompatActivity() {
         }
         
         val textView = TextView(this).apply {
-            text = logsText.toString()
+            text = formattedLogs.toString()
             setPadding(40, 40, 40, 40)
             setTextIsSelectable(true)
         }

@@ -652,12 +652,13 @@ class MainActivity : AppCompatActivity() {
      */
     private fun showLogsDialog() {
         val formattedLogs = StringBuilder()
-        val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         
         synchronized(logMessages) {
             if (logMessages.isEmpty()) {
                 formattedLogs.append(getString(R.string.logs_empty))
             } else {
+                // Create SimpleDateFormat inside synchronized block for thread safety
+                val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
                 logMessages.forEach { log ->
                     val time = dateFormat.format(Date(log.timestamp))
                     formattedLogs.append('[').append(time).append("] ")

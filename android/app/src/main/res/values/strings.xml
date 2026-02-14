@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">4You EuAiTalk</string>
+    <string name="menu_settings">Einstellungen</string>
+    <string name="menu_logs">Logs</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_backend_url">Backend-URL</string>
+    <string name="settings_backend_url_hint">z.B. http://192.168.1.100:3000</string>
+    <string name="settings_backend_url_description">Leer lassen für Standard (10.0.2.2:3000)</string>
+    <string name="settings_save">Speichern</string>
+    <string name="settings_cancel">Abbrechen</string>
+    <string name="settings_reset">Zurücksetzen</string>
+    <string name="logs_title">App Logs</string>
+    <string name="logs_clear">Logs löschen</string>
+    <string name="logs_close">Schließen</string>
+    <string name="logs_empty">Keine Logs vorhanden</string>
+    <string name="logs_cleared">Logs gelöscht</string>
+    <string name="backend_url_updated">Backend-URL aktualisiert</string>
+    <string name="backend_url_reset">Backend-URL zurückgesetzt</string>
 </resources>

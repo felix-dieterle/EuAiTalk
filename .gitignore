@@ -46,3 +46,4 @@ android/captures/
 *.aab
 *.ap_
 *.dex
+.env

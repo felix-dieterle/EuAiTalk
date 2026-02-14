@@ -27,6 +27,10 @@ let rateLimits = {
     chat: { limit: 0, remaining: 0, reset: 0 }
 };
 
+// Log collection
+const MAX_LOGS = 100;
+let appLogs = [];
+
 // DOM elements
 const recordButton = document.getElementById('recordButton');
 const clearButton = document.getElementById('clearButton');
@@ -39,11 +43,81 @@ const settingsModal = document.getElementById('settingsModal');
 const closeSettingsButton = document.getElementById('closeSettings');
 const saveSettingsButton = document.getElementById('saveSettings');
 const resetSettingsButton = document.getElementById('resetSettings');
+const logsButton = document.getElementById('logsButton');
+const logsModal = document.getElementById('logsModal');
+const closeLogsButton = document.getElementById('closeLogs');
+const clearLogsButton = document.getElementById('clearLogs');
+
+/**
+ * Setup console interception to capture logs
+ */
+function setupConsoleInterception() {
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    let intercepting = false;
+    
+    console.log = function(...args) {
+        originalLog.apply(console, args);
+        if (!intercepting && args.length > 0) {
+            intercepting = true;
+            try {
+                const message = args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                ).join(' ');
+                // Skip logging our own log messages
+                if (!message.includes('[INFO]') && !message.includes('[ERROR]') && !message.includes('[WARN]')) {
+                    addLogEntry('info', message);
+                }
+            } finally {
+                intercepting = false;
+            }
+        }
+    };
+    
+    console.error = function(...args) {
+        originalError.apply(console, args);
+        if (!intercepting && args.length > 0) {
+            intercepting = true;
+            try {
+                const message = args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                ).join(' ');
+                if (!message.includes('[ERROR]')) {
+                    addLogEntry('error', message);
+                }
+            } finally {
+                intercepting = false;
+            }
+        }
+    };
+    
+    console.warn = function(...args) {
+        originalWarn.apply(console, args);
+        if (!intercepting && args.length > 0) {
+            intercepting = true;
+            try {
+                const message = args.map(arg => 
+                    typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+                ).join(' ');
+                if (!message.includes('[WARN]')) {
+                    addLogEntry('warn', message);
+                }
+            } finally {
+                intercepting = false;
+            }
+        }
+    };
+}
 
 /**
  * Initialize the app
  */
 async function init() {
+    // Intercept console methods to capture logs
+    setupConsoleInterception();
+    
     // Load settings from localStorage
     loadSettings();
     
@@ -60,6 +134,9 @@ async function init() {
     closeSettingsButton.addEventListener('click', closeSettings);
     saveSettingsButton.addEventListener('click', saveSettingsFromModal);
     resetSettingsButton.addEventListener('click', resetSettings);
+    logsButton.addEventListener('click', openLogs);
+    closeLogsButton.addEventListener('click', closeLogs);
+    clearLogsButton.addEventListener('click', clearLogs);
     
     // Close modal when clicking outside
     settingsModal.addEventListener('click', (e) => {
@@ -732,6 +809,119 @@ function updateRateLimitDisplay() {
     }).join('');
     
     container.innerHTML = html;
+}
+
+/**
+ * Log Management
+ */
+
+/**
+ * Add a log entry (internal, not logged to console)
+ */
+function addLogEntry(level, message, details = null) {
+    const timestamp = new Date().toISOString();
+    const logEntry = {
+        timestamp,
+        level,
+        message,
+        details
+    };
+    
+    appLogs.push(logEntry);
+    
+    // Keep only the last MAX_LOGS entries
+    if (appLogs.length > MAX_LOGS) {
+        appLogs.shift();
+    }
+}
+
+/**
+ * Add a log entry and also log to console
+ */
+function addLog(level, message, details = null) {
+    addLogEntry(level, message, details);
+    
+    // Also log to console
+    const consoleMethod = level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log';
+    const originalConsole = console[consoleMethod];
+    console[consoleMethod](`[${level.toUpperCase()}] ${message}`, details || '');
+}
+
+/**
+ * Open logs modal
+ */
+function openLogs() {
+    updateLogsDisplay();
+    logsModal.classList.add('show');
+}
+
+/**
+ * Close logs modal
+ */
+function closeLogs() {
+    logsModal.classList.remove('show');
+}
+
+/**
+ * Clear all logs
+ */
+function clearLogs() {
+    if (confirm('Alle Logs löschen?')) {
+        appLogs = [];
+        updateLogsDisplay();
+        addLog('info', 'Logs gelöscht');
+        updateLogsDisplay();
+    }
+}
+
+/**
+ * Update logs display in modal
+ */
+function updateLogsDisplay() {
+    const logsContent = document.getElementById('logsContent');
+    if (!logsContent) return;
+    
+    if (appLogs.length === 0) {
+        logsContent.innerHTML = '<div class="no-logs">Keine Logs vorhanden</div>';
+        return;
+    }
+    
+    const html = appLogs.map(log => {
+        const time = new Date(log.timestamp).toLocaleTimeString('de-DE');
+        const levelClass = `log-${log.level}`;
+        const levelIcon = log.level === 'error' ? '❌' : log.level === 'warn' ? '⚠️' : 'ℹ️';
+        
+        let detailsHtml = '';
+        if (log.details) {
+            const detailsStr = typeof log.details === 'object' 
+                ? JSON.stringify(log.details, null, 2) 
+                : log.details;
+            detailsHtml = `<pre class="log-details">${escapeHtml(detailsStr)}</pre>`;
+        }
+        
+        return `
+            <div class="log-entry ${levelClass}">
+                <div class="log-header">
+                    <span class="log-icon">${levelIcon}</span>
+                    <span class="log-time">${time}</span>
+                    <span class="log-level">${log.level.toUpperCase()}</span>
+                </div>
+                <div class="log-message">${escapeHtml(log.message)}</div>
+                ${detailsHtml}
+            </div>
+        `;
+    }).reverse().join('');
+    
+    logsContent.innerHTML = html;
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Initialize app when DOM is ready

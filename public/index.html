@@ -13,6 +13,7 @@
             <h1>🎙️ 4You EuAiTalk</h1>
             <p class="subtitle">Unterhalte dich per Sprache mit der KI</p>
             <button id="settingsButton" class="settings-button" title="Einstellungen">⚙️</button>
+            <button id="logsButton" class="logs-button" title="Logs anzeigen">📋</button>
         </header>
 
         <!-- Persona Selection -->
@@ -116,6 +117,24 @@
             <div class="modal-footer">
                 <button id="resetSettings" class="secondary-button">Zurücksetzen</button>
                 <button id="saveSettings" class="primary-button">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Modal -->
+    <div id="logsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 App Logs</h2>
+                <button id="closeLogs" class="close-button">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="logsContent" class="logs-content">
+                    <div class="no-logs">Keine Logs vorhanden</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="clearLogs" class="secondary-button">Logs löschen</button>
             </div>
         </div>
     </div>

@@ -82,6 +82,26 @@ header h1 {
     transform: rotate(90deg);
 }
 
+.logs-button {
+    position: absolute;
+    top: 1rem;
+    right: 4rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logs-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
 /* Persona Selector */
 .persona-selector {
     padding: 1rem 1.5rem;
@@ -553,4 +573,95 @@ header h1 {
 .secondary-button:hover {
     border-color: var(--primary-color);
     color: var(--primary-color);
+}
+
+/* Logs Content */
+.logs-content {
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--bg-color);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.no-logs {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+    font-style: italic;
+}
+
+.log-entry {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #ccc;
+}
+
+.log-entry.log-error {
+    border-left-color: var(--error-color);
+}
+
+.log-entry.log-warn {
+    border-left-color: #ffa726;
+}
+
+.log-entry.log-info {
+    border-left-color: #42a5f5;
+}
+
+.log-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.log-icon {
+    font-size: 1rem;
+}
+
+.log-time {
+    font-family: monospace;
+}
+
+.log-level {
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.log-message {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    word-break: break-word;
+}
+
+.log-details {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-color);
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    overflow-x: auto;
+    font-family: monospace;
+}
+
+.logs-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.logs-content::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+.logs-content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.logs-content::-webkit-scrollbar-thumb:hover {
+    background: #999;
 }

@@ -170,16 +170,23 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 
+                // Only check for blank pages when loading the server URL, not error pages or other navigations
+                // This prevents infinite loops where the error page triggers another blank page detection
+                if (url != SERVER_URL) {
+                    return
+                }
+                
                 // Check if the page is actually loaded by evaluating JavaScript
                 // This helps detect "successful" loads that result in blank pages
+                // We look for the container div which should exist in the real app
                 view?.evaluateJavascript(
-                    "(function() { return document.body && document.body.innerHTML.length > 0; })();"
+                    "(function() { var container = document.querySelector('.container'); return container && container.innerHTML.trim().length > 100; })();"
                 ) { result ->
-                    // result is "true" if page has content, "false" or "null" if blank
+                    // result is "true" if page has meaningful content, "false" or "null" if blank
                     if (result == "false" || result == "null") {
-                        // Page loaded but is blank - likely a connection issue
+                        // Page loaded but is blank or has minimal content - likely a connection issue
                         if (BuildConfig.DEBUG) {
-                            android.util.Log.d("MainActivity", "Page loaded but appears blank")
+                            android.util.Log.d("MainActivity", "Page loaded but appears blank or incomplete")
                         }
                         // Show error page for blank content
                         val blankPageError = object : WebResourceError {

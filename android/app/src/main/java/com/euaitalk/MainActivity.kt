@@ -25,6 +25,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private val PERMISSION_REQUEST_CODE = 100
     
+    // Minimum content length to consider a page successfully loaded
+    // Pages with less content are likely blank or incomplete
+    private val MIN_PAGE_CONTENT_LENGTH = 100
+    
     // Server URL from BuildConfig - configured per build variant
     // Debug: http://10.0.2.2:3000 (emulator localhost)
     // Release: Set in app/build.gradle
@@ -180,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                 // This helps detect "successful" loads that result in blank pages
                 // We look for the container div which should exist in the real app
                 view?.evaluateJavascript(
-                    "(function() { var container = document.querySelector('.container'); return container && container.innerHTML.trim().length > 100; })();"
+                    "(function() { var container = document.querySelector('.container'); return container && container.innerHTML.trim().length > $MIN_PAGE_CONTENT_LENGTH; })();"
                 ) { result ->
                     // result is "true" if page has meaningful content, "false" or "null" if blank
                     if (result == "false" || result == "null") {

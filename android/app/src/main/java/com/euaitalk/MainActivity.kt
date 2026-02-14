@@ -155,12 +155,8 @@ class MainActivity : AppCompatActivity() {
                 
                 if (isMainFrameError) {
                     // Show error page for HTTP errors (4xx, 5xx)
-                    val httpError = object : WebResourceError {
-                        override fun getErrorCode(): Int = errorResponse?.statusCode ?: -1
-                        override fun getDescription(): CharSequence = 
-                            "HTTP ${errorResponse?.statusCode ?: "Error"}: ${errorResponse?.reasonPhrase ?: "Unknown error"}"
-                    }
-                    showErrorPage(httpError)
+                    // Pass null since we'll generate error details in showErrorPage
+                    showErrorPage(null)
                     
                     // Log for debugging
                     if (BuildConfig.DEBUG) {
@@ -193,11 +189,8 @@ class MainActivity : AppCompatActivity() {
                             android.util.Log.d("MainActivity", "Page loaded but appears blank or incomplete")
                         }
                         // Show error page for blank content
-                        val blankPageError = object : WebResourceError {
-                            override fun getErrorCode(): Int = WebViewClient.ERROR_UNKNOWN
-                            override fun getDescription(): CharSequence = "Seite wurde geladen, aber keine Inhalte angezeigt"
-                        }
-                        showErrorPage(blankPageError)
+                        // Pass null since the page appears blank
+                        showErrorPage(null)
                     }
                 }
             }

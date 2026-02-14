@@ -674,8 +674,7 @@ class MainActivity : AppCompatActivity() {
                 synchronized(logMessages) {
                     logMessages.clear()
                 }
-                addLog("INFO", "Logs cleared")
-                Toast.makeText(this, "Logs gelöscht", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.logs_cleared, Toast.LENGTH_SHORT).show()
             }
             .show()
     }

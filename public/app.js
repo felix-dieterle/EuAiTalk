@@ -836,15 +836,11 @@ function addLogEntry(level, message, details = null) {
 }
 
 /**
- * Add a log entry and also log to console
+ * Add a log entry (public API for manual logging from application code)
+ * This wrapper exists to provide a stable public API for logging
  */
 function addLog(level, message, details = null) {
     addLogEntry(level, message, details);
-    
-    // Also log to console
-    const consoleMethod = level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log';
-    const originalConsole = console[consoleMethod];
-    console[consoleMethod](`[${level.toUpperCase()}] ${message}`, details || '');
 }
 
 /**
@@ -868,8 +864,6 @@ function closeLogs() {
 function clearLogs() {
     if (confirm('Alle Logs löschen?')) {
         appLogs = [];
-        updateLogsDisplay();
-        addLog('info', 'Logs gelöscht');
         updateLogsDisplay();
     }
 }

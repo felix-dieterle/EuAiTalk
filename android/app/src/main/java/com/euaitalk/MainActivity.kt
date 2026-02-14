@@ -658,6 +658,7 @@ class MainActivity : AppCompatActivity() {
                 formattedLogs.append(getString(R.string.logs_empty))
             } else {
                 // Create SimpleDateFormat inside synchronized block for thread safety
+                // The instance is not shared across threads and only used within this block
                 val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
                 logMessages.forEach { log ->
                     val time = dateFormat.format(Date(log.timestamp))

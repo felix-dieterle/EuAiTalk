@@ -50,9 +50,12 @@ const clearLogsButton = document.getElementById('clearLogs');
 
 /**
  * Setup console interception to capture logs
- * Note: The intercepting flag is not thread-safe but is sufficient for
- * single-threaded JavaScript execution in the browser. It prevents infinite
- * recursion when our logging code uses console methods.
+ * 
+ * Thread safety note: JavaScript is single-threaded with an event loop.
+ * The intercepting flag prevents infinite recursion when our addLogEntry
+ * function or other logging code inadvertently calls console methods.
+ * Async operations run sequentially in the event loop, so there's no risk
+ * of concurrent access to the flag.
  */
 function setupConsoleInterception() {
     const originalLog = console.log;

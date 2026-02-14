@@ -25,6 +25,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private val PERMISSION_REQUEST_CODE = 100
     
+    // Minimum content length to consider a page successfully loaded
+    // Pages with less content are likely blank or incomplete
+    private val MIN_PAGE_CONTENT_LENGTH = 100
+    
     // Server URL from BuildConfig - configured per build variant
     // Debug: http://10.0.2.2:3000 (emulator localhost)
     // Release: Set in app/build.gradle
@@ -136,6 +140,57 @@ class MainActivity : AppCompatActivity() {
                         android.util.Log.d("MainActivity", "Error loading $SERVER_URL: ${error?.description} (code: $errorCode)")
                     } else {
                         android.util.Log.e("MainActivity", "Error loading server: ${error?.description} (code: $errorCode)")
+                    }
+                }
+            }
+            
+            override fun onReceivedHttpError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                errorResponse: WebResourceResponse?
+            ) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                
+                val isMainFrameError = request?.isForMainFrame == true
+                
+                if (isMainFrameError) {
+                    // Show error page for HTTP errors (4xx, 5xx)
+                    // Pass null since we'll generate error details in showErrorPage
+                    showErrorPage(null)
+                    
+                    // Log for debugging
+                    if (BuildConfig.DEBUG) {
+                        android.util.Log.d("MainActivity", "HTTP Error loading $SERVER_URL: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}")
+                    } else {
+                        android.util.Log.e("MainActivity", "HTTP Error loading server: ${errorResponse?.statusCode}")
+                    }
+                }
+            }
+            
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                
+                // Only check for blank pages when loading the server URL, not error pages or other navigations
+                // This prevents infinite loops where the error page triggers another blank page detection
+                if (url != SERVER_URL) {
+                    return
+                }
+                
+                // Check if the page is actually loaded by evaluating JavaScript
+                // This helps detect "successful" loads that result in blank pages
+                // We look for the container div which should exist in the real app
+                view?.evaluateJavascript(
+                    "(function() { var container = document.querySelector('.container'); return container && container.innerHTML.trim().length > $MIN_PAGE_CONTENT_LENGTH; })();"
+                ) { result ->
+                    // result is "true" if page has meaningful content, "false" or "null" if blank
+                    if (result == "false" || result == "null") {
+                        // Page loaded but is blank or has minimal content - likely a connection issue
+                        if (BuildConfig.DEBUG) {
+                            android.util.Log.d("MainActivity", "Page loaded but appears blank or incomplete")
+                        }
+                        // Show error page for blank content
+                        // Pass null since the page appears blank
+                        showErrorPage(null)
                     }
                 }
             }

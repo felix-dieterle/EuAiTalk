@@ -176,6 +176,11 @@ class MainActivity : AppCompatActivity() {
         // Set WebViewClient to handle navigation
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                // Handle custom scheme for opening settings from the error page
+                if (request?.url?.scheme == "euaitalk" && request.url?.host == "settings") {
+                    showSettingsDialog()
+                    return true
+                }
                 // Keep navigation within the WebView
                 return false
             }
@@ -480,9 +485,16 @@ class MainActivity : AppCompatActivity() {
                         font-weight: 600;
                         cursor: pointer;
                         transition: transform 0.2s;
+                        margin-bottom: 10px;
                     }
                     .button:active {
                         transform: scale(0.98);
+                    }
+                    .button.button-secondary {
+                        background: white;
+                        color: #667eea;
+                        border: 2px solid #667eea;
+                        margin-bottom: 0;
                     }
                     .footer {
                         margin-top: 20px;
@@ -503,13 +515,24 @@ class MainActivity : AppCompatActivity() {
                             $troubleshootingSteps
                         </ul>
                     </div>
-                    <button class="button" onclick="window.location.reload()">
+                    <button id="btn-retry" class="button">
                         🔄 Erneut versuchen
+                    </button>
+                    <button id="btn-settings" class="button button-secondary">
+                        ⚙️ Backend konfigurieren
                     </button>
                     <div class="footer">
                         EuAiTalk v$safeVersionName
                     </div>
                 </div>
+                <script>
+                    document.getElementById('btn-retry').addEventListener('click', function() {
+                        window.location.reload();
+                    });
+                    document.getElementById('btn-settings').addEventListener('click', function() {
+                        window.location.href = 'euaitalk://settings';
+                    });
+                </script>
             </body>
             </html>
         """.trimIndent()

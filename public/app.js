@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS = {
     backendUrl: '' // Empty means same origin (default)
 };
 
+const VERSION_DISPLAY_DURATION = 3000; // ms to show version on startup
+
 // State management
 let mediaRecorder = null;
 let audioChunks = [];
@@ -20,6 +22,7 @@ let isRecording = false;
 let settings = { ...DEFAULT_SETTINGS };
 let isOnline = true;
 let backendAvailable = false;
+let versionShown = false;
 
 // Rate limit tracking
 let rateLimits = {
@@ -236,7 +239,13 @@ async function checkApiStatus() {
             apiStatusDiv.innerHTML = '<small>⚠️ Demo-Modus (API-Schlüssel nicht konfiguriert)</small>';
         }
         
-        updateStatus('Bereit zum Aufnehmen');
+        if (data.version && !versionShown) {
+            versionShown = true;
+            updateStatus(`EuAiTalk v${data.version}`, 'info');
+            setTimeout(() => updateStatus('Bereit zum Aufnehmen'), VERSION_DISPLAY_DURATION);
+        } else {
+            updateStatus('Bereit zum Aufnehmen');
+        }
     } catch (error) {
         backendAvailable = false;
         recordButton.disabled = true;

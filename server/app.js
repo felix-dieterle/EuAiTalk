@@ -8,6 +8,7 @@ const cors = require('cors');
 const fetch = require('node-fetch');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
+const { version } = require('../package.json');
 
 /**
  * Required environment variables
@@ -197,7 +198,8 @@ function createApp(options = {}) {
   app.get('/api/health', (req, res) => {
     res.json({ 
       status: 'ok', 
-      apiConfigured: true
+      apiConfigured: true,
+      version
     });
   });
   

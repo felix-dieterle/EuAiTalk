@@ -34,10 +34,12 @@ describe('Backend API Tests', () => {
         .get('/api/health')
         .expect(200);
 
-      expect(response.body).toEqual({
+      expect(response.body).toMatchObject({
         status: 'ok',
         apiConfigured: true
       });
+      expect(typeof response.body.version).toBe('string');
+      expect(response.body.version).toMatch(/^\d+\.\d+\.\d+/);
     });
   });
 

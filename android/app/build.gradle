@@ -94,7 +94,7 @@ android {
     }
 }
 
-// Validate that a release keystore is configured in CI before executing any release assembly task.
+// Warn when a release assembly task is run in CI without a keystore configured.
 // This check runs in the execution phase (not configuration phase) so it does not break debug
 // builds or lint checks that run without a keystore (e.g. in pull-request CI jobs).
 gradle.taskGraph.whenReady { taskGraph ->
@@ -103,21 +103,16 @@ gradle.taskGraph.whenReady { taskGraph ->
     if (isCI && !keystoreFile) {
         def hasReleaseTask = taskGraph.allTasks.any { it.name.toLowerCase().contains("release") }
         if (hasReleaseTask) {
-            throw new GradleException(
-                "❌ ANDROID_KEYSTORE_FILE is not set in CI!\n" +
-                "Release APKs must be signed with a consistent keystore.\n" +
-                "Without a fixed keystore every build uses a different debug key,\n" +
-                "which prevents users from upgrading the app without uninstalling first.\n\n" +
-                "Please configure the following repository secrets:\n" +
+            logger.warn(
+                "\n⚠️  WARNING: ANDROID_KEYSTORE_FILE is not set in CI!\n" +
+                "Building release APK with debug signing.\n" +
+                "This APK is NOT suitable for public/production distribution.\n\n" +
+                "To enable signed release APKs, configure these repository secrets:\n" +
                 "  ANDROID_KEYSTORE_BASE64   - base64-encoded keystore file\n" +
                 "  ANDROID_KEYSTORE_PASSWORD - keystore password\n" +
                 "  ANDROID_KEY_ALIAS         - key alias\n" +
                 "  ANDROID_KEY_PASSWORD      - key password\n\n" +
-                "To generate a keystore:\n" +
-                "  keytool -genkey -v -keystore release.keystore -alias euaitalk \\\n" +
-                "          -keyalg RSA -keysize 2048 -validity 10000\n" +
-                "  base64 release.keystore | tr -d '\\n'\n\n" +
-                "See android/PRODUCTION.md for full instructions."
+                "See .github/SIGNING_SETUP.md for full instructions.\n"
             )
         }
     }

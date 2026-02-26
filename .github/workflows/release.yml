@@ -213,7 +213,7 @@ jobs:
           **Android:**
           Download the APK below and install it on your Android device.
           
-          > **Note**: The APK may be signed or unsigned depending on the repository configuration. Unsigned APKs require enabling "Install from unknown sources" on your device.
+          > **Note**: Enable "Install from unknown sources" on your device. The APK is signed with the repository release keystore, allowing seamless upgrades between versions.
         draft: true
         prerelease: false
 
@@ -287,22 +287,36 @@ jobs:
           base64 --decode > android/release.keystore <<< "$ANDROID_KEYSTORE_BASE64"
           echo "✅ Keystore file created"
         else
-          echo "⚠️ No keystore configured - APK will be unsigned"
+          echo "❌ ERROR: ANDROID_KEYSTORE_BASE64 secret is not configured!"
+          echo ""
+          echo "Release APKs must always be signed with the same keystore."
+          echo "Without a fixed keystore, every build uses a different debug key,"
+          echo "which prevents users from upgrading the app without uninstalling first."
+          echo ""
+          echo "To fix this, generate a keystore and add it as repository secrets:"
+          echo "  keytool -genkey -v -keystore release.keystore -alias euaitalk \\"
+          echo "          -keyalg RSA -keysize 2048 -validity 10000"
+          echo "  base64 release.keystore | tr -d '\\n'"
+          echo ""
+          echo "Then add these repository secrets:"
+          echo "  ANDROID_KEYSTORE_BASE64   (base64-encoded keystore)"
+          echo "  ANDROID_KEYSTORE_PASSWORD (keystore password)"
+          echo "  ANDROID_KEY_ALIAS         (key alias, e.g. euaitalk)"
+          echo "  ANDROID_KEY_PASSWORD      (key password)"
+          echo ""
+          echo "See android/PRODUCTION.md for full instructions."
+          exit 1
         fi
     
     - name: Build release APK
       env:
-        ANDROID_KEYSTORE_FILE: ${{ secrets.ANDROID_KEYSTORE_BASE64 && 'release.keystore' || '' }}
+        ANDROID_KEYSTORE_FILE: release.keystore
         ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       run: |
         cd android
-        if [ -n "$ANDROID_KEYSTORE_FILE" ]; then
-          echo "Building signed release APK..."
-        else
-          echo "Building unsigned release APK (no keystore configured)..."
-        fi
+        echo "Building signed release APK..."
         gradle assembleRelease --stacktrace
     
     - name: Rename APK

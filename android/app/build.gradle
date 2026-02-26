@@ -67,13 +67,6 @@ android {
             if (keystoreFile) {
                 signingConfig signingConfigs.release
             } else {
-                // Warn if building in CI/CD without proper signing
-                def isCI = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
-                if (isCI) {
-                    logger.warn("⚠️  WARNING: Building release APK in CI without keystore - using debug signing!")
-                    logger.warn("⚠️  Debug-signed APKs should NOT be distributed publicly!")
-                    logger.warn("⚠️  Configure ANDROID_KEYSTORE_FILE and related secrets for release builds.")
-                }
                 // Fallback to debug signing for local development/testing only
                 // DO NOT use debug-signed APKs for public distribution!
                 signingConfig signingConfigs.debug
@@ -98,6 +91,35 @@ android {
 
     kotlinOptions {
         jvmTarget = '11'
+    }
+}
+
+// Validate that a release keystore is configured in CI before executing any release assembly task.
+// This check runs in the execution phase (not configuration phase) so it does not break debug
+// builds or lint checks that run without a keystore (e.g. in pull-request CI jobs).
+gradle.taskGraph.whenReady { taskGraph ->
+    def isCI = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
+    def keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
+    if (isCI && !keystoreFile) {
+        def hasReleaseTask = taskGraph.allTasks.any { it.name.toLowerCase().contains("release") }
+        if (hasReleaseTask) {
+            throw new GradleException(
+                "❌ ANDROID_KEYSTORE_FILE is not set in CI!\n" +
+                "Release APKs must be signed with a consistent keystore.\n" +
+                "Without a fixed keystore every build uses a different debug key,\n" +
+                "which prevents users from upgrading the app without uninstalling first.\n\n" +
+                "Please configure the following repository secrets:\n" +
+                "  ANDROID_KEYSTORE_BASE64   - base64-encoded keystore file\n" +
+                "  ANDROID_KEYSTORE_PASSWORD - keystore password\n" +
+                "  ANDROID_KEY_ALIAS         - key alias\n" +
+                "  ANDROID_KEY_PASSWORD      - key password\n\n" +
+                "To generate a keystore:\n" +
+                "  keytool -genkey -v -keystore release.keystore -alias euaitalk \\\n" +
+                "          -keyalg RSA -keysize 2048 -validity 10000\n" +
+                "  base64 release.keystore | tr -d '\\n'\n\n" +
+                "See android/PRODUCTION.md for full instructions."
+            )
+        }
     }
 }
 

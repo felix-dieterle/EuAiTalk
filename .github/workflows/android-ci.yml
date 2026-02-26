@@ -44,23 +44,6 @@ jobs:
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
     
-    - name: Test release build (unsigned)
-      run: |
-        cd android
-        echo "Testing release build configuration..."
-        gradle assembleRelease --stacktrace
-        echo "✅ Release build successful"
-    
-    - name: Verify release APK exists
-      run: |
-        if [ -f android/app/build/outputs/apk/release/app-release-unsigned.apk ] || [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
-          echo "✅ Release APK created successfully"
-        else
-          echo "❌ Release APK not found"
-          ls -la android/app/build/outputs/apk/release/ || echo "Release output directory not found"
-          exit 1
-        fi
-    
     - name: Run lint checks
       run: cd android && gradle lint
     

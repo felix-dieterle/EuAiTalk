@@ -107,6 +107,16 @@ function setupConsoleInterception() {
 }
 
 /**
+ * Hide the loading overlay once the app has started
+ */
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+/**
  * Initialize the app
  */
 async function init() {
@@ -158,6 +168,9 @@ async function init() {
         updateStatus('❌ Mikrofon-Zugriff verweigert', 'error');
         recordButton.disabled = true;
     }
+
+    // App has initialised successfully – reveal it
+    hideLoadingOverlay();
 }
 
 /**
@@ -930,4 +943,11 @@ function escapeHtml(text) {
 }
 
 // Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    init().catch((error) => {
+        console.error('App initialisation failed:', error);
+        if (typeof showAppError === 'function') {
+            showAppError(error.message, error);
+        }
+    });
+});

@@ -5,8 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4You EuAiTalk - Audio Konversation mit KI</title>
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // Global error handler – catches uncaught errors before app.js loads
+        window.onerror = function(message, source, lineno, colno, error) {
+            var location = source ? ' (' + source + ':' + lineno + ':' + colno + ')' : '';
+            showAppError(message + location, error);
+            return true; // prevent default browser error handling
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            showAppError((event.reason && event.reason.message) || String(event.reason), event.reason);
+        });
+        function showAppError(message, error) {
+            var overlay = document.getElementById('appErrorOverlay');
+            var details = document.getElementById('appErrorDetails');
+            var loading = document.getElementById('loadingOverlay');
+            if (loading) loading.style.display = 'none';
+            if (overlay) {
+                if (details && message) {
+                    details.textContent = message;
+                    details.style.display = 'block';
+                }
+                overlay.style.display = 'flex';
+            }
+        }
+    </script>
 </head>
 <body>
+    <!-- Loading overlay shown during app initialisation -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>App wird geladen…</p>
+        </div>
+    </div>
+
+    <!-- Error overlay shown when a fatal error prevents the app from starting -->
+    <div id="appErrorOverlay" class="error-overlay" style="display:none;">
+        <div class="error-overlay-content">
+            <div class="error-overlay-icon">⚠️</div>
+            <h2>App konnte nicht gestartet werden</h2>
+            <p>Es ist ein unerwarteter Fehler aufgetreten. Bitte lade die Seite neu oder überprüfe deine Verbindung.</p>
+            <pre id="appErrorDetails" class="error-overlay-details" style="display:none;"></pre>
+            <button onclick="window.location.reload()" class="error-reload-button">🔄 Seite neu laden</button>
+        </div>
+    </div>
+
+    <noscript>
+        <div class="noscript-message">
+            <p>⚠️ JavaScript ist deaktiviert.</p>
+            <p>Bitte aktiviere JavaScript, um 4You EuAiTalk zu nutzen.</p>
+        </div>
+    </noscript>
+
     <div class="container">
         <!-- Header -->
         <header>

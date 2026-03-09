@@ -181,6 +181,11 @@ class MainActivity : AppCompatActivity() {
                     showSettingsDialog()
                     return true
                 }
+                // Handle custom scheme for retrying after an error
+                if (request?.url?.scheme == "euaitalk" && request.url?.host == "retry") {
+                    loadApp()
+                    return true
+                }
                 // Keep navigation within the WebView
                 return false
             }
@@ -527,7 +532,7 @@ class MainActivity : AppCompatActivity() {
                 </div>
                 <script>
                     document.getElementById('btn-retry').addEventListener('click', function() {
-                        window.location.reload();
+                        window.location.href = 'euaitalk://retry';
                     });
                     document.getElementById('btn-settings').addEventListener('click', function() {
                         window.location.href = 'euaitalk://settings';

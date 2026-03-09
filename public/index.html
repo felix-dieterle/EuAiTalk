@@ -47,7 +47,7 @@
             <h2>App konnte nicht gestartet werden</h2>
             <p>Es ist ein unerwarteter Fehler aufgetreten. Bitte lade die Seite neu oder überprüfe deine Verbindung.</p>
             <pre id="appErrorDetails" class="error-overlay-details" style="display:none;"></pre>
-            <button onclick="window.location.reload()" class="error-reload-button">🔄 Seite neu laden</button>
+            <button onclick="if(typeof retryApp === 'function') retryApp(); else window.location.reload();" class="error-reload-button">🔄 Erneut versuchen</button>
             <button onclick="if(typeof openSettings === 'function') openSettings();" class="error-settings-button">⚙️ Einstellungen öffnen</button>
         </div>
     </div>

@@ -439,6 +439,25 @@ header h1 {
     box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
 }
 
+.error-settings-button {
+    display: block;
+    margin-top: 0.75rem;
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    border-radius: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    width: 100%;
+}
+
+.error-settings-button:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
 /* Noscript fallback */
 .noscript-message {
     position: fixed;
@@ -483,7 +502,7 @@ header h1 {
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 3000;
     left: 0;
     top: 0;
     width: 100%;

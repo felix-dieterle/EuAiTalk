@@ -23,8 +23,10 @@ describe('Startup Error Handling', () => {
                     <p>Es ist ein unerwarteter Fehler aufgetreten.</p>
                     <pre id="appErrorDetails" class="error-overlay-details" style="display:none;"></pre>
                     <button id="reloadButton">🔄 Seite neu laden</button>
+                    <button onclick="if(typeof openSettings === 'function') openSettings();" class="error-settings-button">⚙️ Einstellungen öffnen</button>
                 </div>
             </div>
+            <div id="settingsModal" class="modal"></div>
         `;
     });
 
@@ -109,6 +111,30 @@ describe('Startup Error Handling', () => {
 
             expect(overlay.style.display).toBe('flex');
             expect(details.style.display).toBe('none'); // not shown when message is empty
+        });
+
+        it('should have a settings button in the error overlay', () => {
+            const settingsButton = document.querySelector('.error-settings-button');
+            expect(settingsButton).not.toBeNull();
+            expect(settingsButton.textContent).toContain('Einstellungen');
+        });
+
+        it('should call openSettings when settings button is clicked and function exists', () => {
+            const openSettingsMock = jest.fn();
+            window.openSettings = openSettingsMock;
+
+            const settingsButton = document.querySelector('.error-settings-button');
+            settingsButton.click();
+
+            expect(openSettingsMock).toHaveBeenCalledTimes(1);
+
+            delete window.openSettings;
+        });
+
+        it('should not throw when settings button is clicked and openSettings is not defined', () => {
+            delete window.openSettings;
+            const settingsButton = document.querySelector('.error-settings-button');
+            expect(() => settingsButton.click()).not.toThrow();
         });
     });
 

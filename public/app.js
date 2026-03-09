@@ -129,8 +129,8 @@ async function init() {
     // Set up online/offline detection
     setupOnlineDetection();
     
-    // Check API status
-    checkApiStatus();
+    // Check API status (and display version on loading screen)
+    const apiCheckPromise = checkApiStatus();
     
     // Set up event listeners
     recordButton.addEventListener('click', toggleRecording);
@@ -168,6 +168,9 @@ async function init() {
         updateStatus('❌ Mikrofon-Zugriff verweigert', 'error');
         recordButton.disabled = true;
     }
+
+    // Ensure version has been displayed before revealing the app
+    await apiCheckPromise;
 
     // App has initialised successfully – reveal it
     hideLoadingOverlay();
@@ -254,8 +257,13 @@ async function checkApiStatus() {
         
         if (data.version && !versionShown) {
             versionShown = true;
+            const loadingVersionEl = document.getElementById('loadingVersion');
+            if (loadingVersionEl) {
+                loadingVersionEl.textContent = `v${data.version}`;
+            }
             updateStatus(`EuAiTalk v${data.version}`, 'info');
-            setTimeout(() => updateStatus('Bereit zum Aufnehmen'), VERSION_DISPLAY_DURATION);
+            await new Promise(resolve => setTimeout(resolve, VERSION_DISPLAY_DURATION));
+            updateStatus('Bereit zum Aufnehmen');
         } else {
             updateStatus('Bereit zum Aufnehmen');
         }

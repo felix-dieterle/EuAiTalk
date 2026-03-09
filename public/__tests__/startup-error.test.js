@@ -14,6 +14,7 @@ describe('Startup Error Handling', () => {
                 <div class="loading-content">
                     <div class="loading-spinner"></div>
                     <p>App wird geladen…</p>
+                    <p id="loadingVersion" class="loading-version"></p>
                 </div>
             </div>
             <div id="appErrorOverlay" class="error-overlay" style="display:none;">
@@ -44,6 +45,22 @@ describe('Startup Error Handling', () => {
             overlay.style.display = 'none';
 
             expect(overlay.style.display).toBe('none');
+        });
+
+        it('should display version text on the loading overlay', () => {
+            const versionEl = document.getElementById('loadingVersion');
+            expect(versionEl).not.toBeNull();
+
+            // Simulate checkApiStatus() populating the version element
+            versionEl.textContent = 'v1.0.21';
+
+            expect(versionEl.textContent).toBe('v1.0.21');
+        });
+
+        it('should start with an empty version element', () => {
+            const versionEl = document.getElementById('loadingVersion');
+            expect(versionEl).not.toBeNull();
+            expect(versionEl.textContent).toBe('');
         });
     });
 

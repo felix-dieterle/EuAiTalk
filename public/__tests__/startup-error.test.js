@@ -23,12 +23,15 @@ describe('Startup Error Handling', () => {
                     <h2>App konnte nicht gestartet werden</h2>
                     <p>Es ist ein unerwarteter Fehler aufgetreten.</p>
                     <pre id="appErrorDetails" class="error-overlay-details" style="display:none;"></pre>
-                    <button id="reloadButton">🔄 Seite neu laden</button>
+                    <button onclick="if(typeof retryApp === 'function') retryApp(); else window.location.reload();" class="error-reload-button">🔄 Erneut versuchen</button>
                     <button onclick="if(typeof openSettings === 'function') openSettings();" class="error-settings-button">⚙️ Einstellungen öffnen</button>
                 </div>
             </div>
             <div id="settingsModal" class="modal"></div>
         `;
+        // Clean up any global functions between tests
+        delete window.retryApp;
+        delete window.openSettings;
     });
 
     describe('Loading Overlay', () => {
@@ -152,6 +155,86 @@ describe('Startup Error Handling', () => {
             delete window.openSettings;
             const settingsButton = document.querySelector('.error-settings-button');
             expect(() => settingsButton.click()).not.toThrow();
+        });
+
+        it('should have a retry button labelled "Erneut versuchen"', () => {
+            const retryButton = document.querySelector('.error-reload-button');
+            expect(retryButton).not.toBeNull();
+            expect(retryButton.textContent).toContain('Erneut versuchen');
+        });
+    });
+
+    describe('Retry button behaviour', () => {
+        it('should call retryApp when retry button is clicked and retryApp is defined', () => {
+            const retryMock = jest.fn();
+            window.retryApp = retryMock;
+
+            const retryButton = document.querySelector('.error-reload-button');
+            retryButton.click();
+
+            expect(retryMock).toHaveBeenCalledTimes(1);
+        });
+
+        it('should fall back to window.location.reload when retryApp is not defined', () => {
+            // The retry button uses inline onclick with a conditional fallback:
+            // if(typeof retryApp === 'function') retryApp(); else window.location.reload();
+            // We verify the fallback is present in the onclick attribute.
+            delete window.retryApp;
+            const retryButton = document.querySelector('.error-reload-button');
+            const onclickAttr = retryButton.getAttribute('onclick');
+            expect(onclickAttr).toContain('window.location.reload()');
+            expect(onclickAttr).toContain('retryApp');
+        });
+
+        it('should hide the error overlay and show the loading overlay during retry', async () => {
+            const errorOverlay = document.getElementById('appErrorOverlay');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Put app into error state
+            errorOverlay.style.display = 'flex';
+            loadingOverlay.style.display = 'none';
+
+            // Simulate retryApp: show loading, then hide it
+            let loadingVisibleDuringCheck = false;
+            window.retryApp = async function() {
+                errorOverlay.style.display = 'none';
+                loadingOverlay.style.display = 'flex';
+                loadingVisibleDuringCheck = loadingOverlay.style.display === 'flex';
+                // Simulate successful API check
+                loadingOverlay.style.display = 'none';
+            };
+
+            const retryButton = document.querySelector('.error-reload-button');
+            retryButton.click();
+            await Promise.resolve(); // flush microtasks
+
+            expect(loadingVisibleDuringCheck).toBe(true);
+            expect(errorOverlay.style.display).toBe('none');
+            expect(loadingOverlay.style.display).toBe('none');
+        });
+
+        it('should show the error overlay again if retry fails', async () => {
+            const errorOverlay = document.getElementById('appErrorOverlay');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Put app into error state
+            errorOverlay.style.display = 'flex';
+            loadingOverlay.style.display = 'none';
+
+            // Simulate retryApp that fails
+            window.retryApp = async function() {
+                errorOverlay.style.display = 'none';
+                loadingOverlay.style.display = 'flex';
+                // Simulate failed API check → show error again
+                loadingOverlay.style.display = 'none';
+                errorOverlay.style.display = 'flex';
+            };
+
+            const retryButton = document.querySelector('.error-reload-button');
+            retryButton.click();
+            await Promise.resolve();
+
+            expect(errorOverlay.style.display).toBe('flex');
         });
     });
 

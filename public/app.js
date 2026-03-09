@@ -117,6 +117,34 @@ function hideLoadingOverlay() {
 }
 
 /**
+ * Soft-retry the app without a full page reload.
+ * Re-checks the backend connection and reveals the app when available.
+ * Falls back to window.location.reload() if the app was never initialised.
+ */
+async function retryApp() {
+    const errorOverlay = document.getElementById('appErrorOverlay');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // Hide error overlay and show loading indicator
+    if (errorOverlay) errorOverlay.style.display = 'none';
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
+    try {
+        await checkApiStatus();
+    } catch (error) {
+        if (typeof showAppError === 'function') {
+            showAppError(error.message, error);
+        }
+        return;
+    }
+
+    hideLoadingOverlay();
+}
+
+// Expose retryApp globally so the error overlay button in index.html can call it
+window.retryApp = retryApp;
+
+/**
  * Initialize the app
  */
 async function init() {

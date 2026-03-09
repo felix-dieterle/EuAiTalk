@@ -139,6 +139,10 @@ class MainActivity : AppCompatActivity() {
      * Configure WebView settings for optimal performance and compatibility
      */
     private fun setupWebView() {
+        // Set background colour to match the app theme so the WebView never shows a white
+        // screen while loading or waiting for the server to respond
+        webView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_gradient))
+
         webView.settings.apply {
             // Enable JavaScript (required for the app)
             javaScriptEnabled = true
@@ -248,8 +252,13 @@ class MainActivity : AppCompatActivity() {
                 
                 val serverUrl = getServerUrl()
                 // Only check for blank pages when loading the server URL, not error pages or other navigations
-                // This prevents infinite loops where the error page triggers another blank page detection
-                if (url != serverUrl) {
+                // This prevents infinite loops where the error page triggers another blank page detection.
+                // Normalize URLs by stripping trailing slashes to handle WebView URL normalization.
+                // If url is null we cannot identify the page, so skip the check.
+                if (url == null) return
+                val normalizedUrl = url.trimEnd('/')
+                val normalizedServerUrl = serverUrl.trimEnd('/')
+                if (normalizedUrl != normalizedServerUrl) {
                     return
                 }
                 
@@ -265,9 +274,9 @@ class MainActivity : AppCompatActivity() {
                         if (BuildConfig.DEBUG) {
                             android.util.Log.d("MainActivity", "Page loaded but appears blank or incomplete")
                         }
-                        // Show error page for blank content
-                        // Pass null since the page appears blank
-                        showErrorPage(null)
+                        // Defer error page load to avoid calling loadData from within an async
+                        // WebView callback, which is unreliable on some Android versions
+                        webView.post { showErrorPage(null) }
                     }
                 }
             }
@@ -542,8 +551,13 @@ class MainActivity : AppCompatActivity() {
             </html>
         """.trimIndent()
         
-        // Use 'about:blank' as baseURL to prevent potential security issues
-        webView.loadDataWithBaseURL("about:blank", html, "text/html", "UTF-8", null)
+        // Defer the load to the next event-loop iteration.
+        // Calling loadData/loadUrl directly from within WebViewClient callbacks
+        // (onReceivedError, onReceivedHttpError) is unreliable on some Android
+        // versions and can result in a persistent white screen.
+        webView.post {
+            webView.loadDataWithBaseURL("about:blank", html, "text/html", "UTF-8", null)
+        }
     }
     
     /**

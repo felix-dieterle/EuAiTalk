@@ -187,13 +187,13 @@ async function init() {
     // Set up settings sliders
     setupSettingsSliders();
     
-    // Request microphone permission
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop()); // Stop immediately, we just wanted permission
-        updateStatus('Bereit zum Aufnehmen');
-    } catch (error) {
-        updateStatus('❌ Mikrofon-Zugriff verweigert', 'error');
+    // Check microphone API availability without blocking on the permission dialog.
+    // Actual permission is requested the first time the user presses Record.
+    // NOTE: Calling getUserMedia() here can cause init() to hang indefinitely in
+    // Android WebView over HTTP (the permission Promise never settles), which keeps
+    // the loading overlay visible forever and results in a blank purple page.
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        updateStatus('❌ Mikrofon nicht unterstützt', 'error');
         recordButton.disabled = true;
     }
 
@@ -359,6 +359,11 @@ async function toggleRecording() {
  * Start recording audio
  */
 async function startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        updateStatus('❌ Mikrofon nicht unterstützt', 'error');
+        recordButton.disabled = true;
+        return;
+    }
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
